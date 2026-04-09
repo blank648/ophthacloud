@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: ophthacloud-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ophthacloud_db
+    username: ophthacloud
+    password: ${DB_PASSWORD:dev_password_change_in_prod}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+        format_sql: false
+        show_sql: false
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/ophthacloud}
+          jwk-set-uri: ${KEYCLOAK_JWK_URI:http://localhost:8180/realms/ophthacloud/protocol/openid-connect/certs}
+
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE
+    default-property-inclusion: NON_NULL
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+ophthacloud:
+  minio:
+    endpoint: http://localhost:9000
+    access-key: minioadmin
+    secret-key: ${MINIO_SECRET:minioadmin}
+    buckets:
+      patient-documents: patient-documents
+      investigation-images: investigation-images
+      generated-documents: generated-documents
+      profile-photos: profile-photos
+  keycloak:
+    admin-url: http://localhost:8180
+    realm: ophthacloud
+    client-id: ophthacloud-backend
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+
+server:
+  port: 8080
