@@ -1,0 +1,182 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primary Brand (Deep Medical Teal) */
+    --color-primary-900: 197 73% 18%;
+    --color-primary-800: 197 73% 23%;
+    --color-primary-700: 197 73% 29%;
+    --color-primary-600: 197 73% 34%;
+    --color-primary-500: 197 63% 41%;
+    --color-primary-400: 197 60% 53%;
+    --color-primary-300: 197 60% 69%;
+    --color-primary-200: 197 70% 84%;
+    --color-primary-100: 197 78% 93%;
+    --color-primary-50: 197 80% 97%;
+
+    /* Accent (Optical Amber) */
+    --color-accent-600: 30 100% 39%;
+    --color-accent-500: 30 100% 47%;
+    --color-accent-400: 35 90% 54%;
+    --color-accent-100: 40 95% 94%;
+
+    /* Clinical Status */
+    --color-success: 155 63% 30%;
+    --color-warning: 38 100% 39%;
+    --color-danger: 6 64% 46%;
+    --color-info: 220 91% 54%;
+    --color-neutral: 220 9% 46%;
+
+    /* Surfaces */
+    --color-bg-canvas: 213 28% 97%;
+    --color-bg-surface: 0 0% 100%;
+    --color-bg-sidebar: 200 60% 15%;
+    --color-bg-sidebar-hover: 197 50% 22%;
+    --color-bg-sidebar-active: 197 73% 34%;
+    --color-bg-elevated: 0 0% 100%;
+
+    /* Borders */
+    --color-border-subtle: 214 32% 91%;
+    --color-border-default: 213 27% 84%;
+    --color-border-strong: 215 16% 62%;
+
+    /* Text */
+    --color-text-primary: 222 47% 11%;
+    --color-text-secondary: 215 19% 35%;
+    --color-text-muted: 215 16% 62%;
+    --color-text-inverse: 0 0% 100%;
+    --color-text-clinical: 197 73% 18%;
+
+    /* Shadcn tokens mapped */
+    --background: var(--color-bg-canvas);
+    --foreground: var(--color-text-primary);
+    --card: var(--color-bg-surface);
+    --card-foreground: var(--color-text-primary);
+    --popover: var(--color-bg-surface);
+    --popover-foreground: var(--color-text-primary);
+    --primary: var(--color-primary-600);
+    --primary-foreground: 0 0% 100%;
+    --secondary: var(--color-primary-100);
+    --secondary-foreground: var(--color-primary-900);
+    --muted: var(--color-bg-canvas);
+    --muted-foreground: var(--color-text-secondary);
+    --accent: var(--color-primary-50);
+    --accent-foreground: var(--color-primary-900);
+    --destructive: var(--color-danger);
+    --destructive-foreground: 0 0% 100%;
+    --border: var(--color-border-subtle);
+    --input: var(--color-border-default);
+    --ring: var(--color-primary-600);
+    --radius: 0.5rem;
+
+    --sidebar-background: var(--color-bg-sidebar);
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: var(--color-primary-400);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: var(--color-bg-sidebar-hover);
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 200 40% 22%;
+    --sidebar-ring: var(--color-primary-400);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08);
+    --shadow-focus: 0 0 0 3px rgba(19,117,156,0.25);
+  }
+
+  .dark {
+    --color-bg-canvas: 210 40% 10%;
+    --color-bg-surface: 210 35% 14%;
+    --color-bg-elevated: 210 30% 19%;
+    --color-border-subtle: 200 30% 22%;
+    --color-border-default: 200 25% 30%;
+    --color-border-strong: 200 20% 40%;
+    --color-text-primary: 200 50% 93%;
+    --color-text-secondary: 200 30% 65%;
+    --color-text-muted: 200 20% 50%;
+    --color-text-clinical: var(--color-primary-300);
+
+    --background: var(--color-bg-canvas);
+    --foreground: var(--color-text-primary);
+    --card: var(--color-bg-surface);
+    --card-foreground: var(--color-text-primary);
+    --popover: var(--color-bg-surface);
+    --popover-foreground: var(--color-text-primary);
+    --primary: var(--color-primary-600);
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 30% 19%;
+    --secondary-foreground: 200 50% 93%;
+    --muted: 210 30% 19%;
+    --muted-foreground: var(--color-text-secondary);
+    --accent: 210 30% 19%;
+    --accent-foreground: 200 50% 93%;
+    --destructive: var(--color-danger);
+    --destructive-foreground: 0 0% 100%;
+    --border: var(--color-border-subtle);
+    --input: var(--color-border-default);
+    --ring: var(--color-primary-400);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+/* Clinical data font */
+.font-clinical {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Type scale */
+.text-clinical-xs { font-size: 11px; line-height: 16px; }
+.text-clinical-sm { font-size: 13px; line-height: 20px; }
+.text-clinical-base { font-size: 15px; line-height: 24px; }
+.text-clinical-md { font-size: 17px; line-height: 26px; }
+.text-clinical-lg { font-size: 20px; line-height: 28px; }
+.text-clinical-xl { font-size: 24px; line-height: 32px; }
+.text-clinical-2xl { font-size: 30px; line-height: 38px; }
+.text-clinical-3xl { font-size: 38px; line-height: 46px; }
+
+/* Uppercase clinical labels */
+.clinical-label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+/* Badge letter spacing */
+.badge-text {
+  letter-spacing: 0.04em;
+}
+
+/* Clinical input styling */
+.clinical-input {
+  font-family: 'JetBrains Mono', monospace;
+  background-color: hsl(var(--color-primary-50));
+  border-color: hsl(var(--color-primary-200));
+}
+.clinical-input:focus {
+  border-color: hsl(var(--color-primary-500));
+  background-color: white;
+}
+
+/* IOP color coding */
+.iop-normal { color: hsl(var(--color-success)); }
+.iop-warning { color: hsl(var(--color-warning)); font-weight: 600; }
+.iop-danger { color: hsl(var(--color-danger)); font-weight: 700; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--color-border-default)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--color-border-strong)); }

@@ -1,0 +1,38 @@
+# Backend (Maven/Spring Boot)
+**/target/
+**/.mvn/
+**/mvnw
+**/mvnw.cmd
+**/*.log
+**/logs/
+**/effective-pom.xml
+**/*.startup
+
+# Frontend (Node/Bun/Vite)
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+**/.env.local
+**/.env.production
+**/bun.lockb
+**/bun.lock
+
+# IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker/data/
+*.env

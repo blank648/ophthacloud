@@ -1,11 +1,3 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
-
-# sa trecem la START_PROMPT.md. dar din ce am observat ai inteles partial ce am vrut sa spun despre acest prompt. desi ai precizat corect ca nu este arhitectul proiectului ci doar executant, rolul acestuia este de fapt sa se foloseasca de un model puternic ( in acest caz Claude 4.6 Opus ) pentru a planifica toate sprinturile necesare in vederea implementarii Fazei 1 — Development \& Prototip ( cu tot cu analiza gidelines ) pe care apoi le voi executa cu modele mai putin puternice decat Opus ( claude 4.6 sonnet \& gemini 3pro / flash ) pentru a implementa cerintele inividuale din fiecare sprint ( dar si a sugera ce model sa folosesc pentru fiecare cerinta ). iar documentele anterioare guide 00-07 nu vor fi atasate in chat AntiGravity, ci atasate intr-un directory separat in cadrul proietului ( pentru ca agentii sa poata analiza oricand structura decizionala )
-
-Înțeles perfect — rolul este fundamentalmente diferit față de ce scrisesem inițial. Opus **nu execută** — **gândește și planifică întreaga Fază 1** după care predă un plan structurat executorilor. Iată documentul:
-
-***
-
 # START_PROMPT.md
 
 > **Scop:** Prompt de inițializare pentru sesiunea de planificare Antigravity (model: Claude 4.6 Opus)
@@ -203,20 +195,4 @@ Stack-ul este fix și nenegociabil:
 
 Ești gata? Începe cu PASUL 1 — citirea documentelor din guidelines/.
 ```
-
-
-***
-
-## Note de utilizare
-
-**Cum atașezi documentele:** În Antigravity, atașezi directorul `guidelines/` sau fișierele individual înainte de a trimite promptul — Antigravity le va citi la PASUL 1 din propriul context de tool use, nu din memoria conversației.
-
-**Când refolosești Opus:** Dacă pe parcursul execuției sprint-urilor apar blocante majore (conflict nerezolvat, decizie arhitecturală neprevăzută, sprint care se dovedește imposibil de implementat conform spec), redeschizi o sesiune Opus cu același START_PROMPT + contextul blocantului și ceri re-planificarea sprint-ului afectat.
-
-**Când NU refolosești Opus:** Pentru întrebări de implementare punctuală — acestea merg direct la Sonnet sau Pro cu referința la task-ul OC-NNN și documentul GUIDE relevant.
-
-***
-
-*End of START_PROMPT.md*
-*Toate documentele guidelines/ sunt acum complete — GUIDE_00 prin GUIDE_07 + START_PROMPT*
 

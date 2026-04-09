@@ -1,0 +1,248 @@
+{
+  "id": "ophthacloud",
+  "realm": "ophthacloud",
+  "displayName": "OphthaCloud",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 28800,
+  "ssoSessionMaxLifespan": 43200,
+  "offlineSessionIdleTimeout": 2592000,
+  "clientSessionIdleTimeout": 28800,
+  "clientSessionMaxLifespan": 43200,
+
+  "roles": {
+    "realm": [
+      {
+        "name": "PLATFORM_ADMIN",
+        "description": "Platform super-admin — no clinical data access",
+        "composite": false
+      },
+      {
+        "name": "TENANT_MEMBER",
+        "description": "Any user belonging to a tenant clinic",
+        "composite": false
+      }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "ophthacloud-backend",
+      "name": "OphthaCloud Backend",
+      "description": "Spring Boot confidential client for token introspection",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "dev-backend-secret-change-in-prod",
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "https://app.ophthacloud.ro/*"
+      ],
+      "webOrigins": ["+"],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "ophthacloud-claims"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "ophthacloud-frontend",
+      "name": "OphthaCloud Frontend",
+      "description": "Next.js SPA — public client with PKCE",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "pkceCodeChallengeMethod": "S256",
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "https://app.ophthacloud.ro/*"
+      ],
+      "postLogoutRedirectUris": [
+        "http://localhost:3000/",
+        "https://app.ophthacloud.ro/"
+      ],
+      "webOrigins": ["+"],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "ophthacloud-claims"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "ophthacloud-portal",
+      "name": "OphthaCloud Patient Portal",
+      "description": "Patient Portal SPA — public client with PKCE",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "pkceCodeChallengeMethod": "S256",
+      "redirectUris": [
+        "http://localhost:3001/*",
+        "https://portal.ophthacloud.ro/*"
+      ],
+      "postLogoutRedirectUris": [
+        "http://localhost:3001/",
+        "https://portal.ophthacloud.ro/"
+      ],
+      "webOrigins": ["+"],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "ophthacloud-claims"
+      ],
+      "optionalClientScopes": []
+    }
+  ],
+
+  "clientScopes": [
+    {
+      "name": "ophthacloud-claims",
+      "description": "Injects tenant_id, staff_id, staff_role, and permissions into JWT",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "tenant_id-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "tenant_id",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "staff_id-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "staff_id",
+            "claim.name": "staff_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "staff_role-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "staff_role",
+            "claim.name": "staff_role",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "permissions-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "permissions_json",
+            "claim.name": "permissions",
+            "jsonType.label": "JSON",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+
+  "users": [
+    {
+      "username": "dr.test@clinica-demo.ro",
+      "email": "dr.test@clinica-demo.ro",
+      "firstName": "Alexandru",
+      "lastName": "Test",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["TENANT_MEMBER"],
+      "attributes": {
+        "tenant_id":   ["11111111-0000-0000-0000-000000000001"],
+        "staff_id":    ["22222222-0000-0000-0000-000000000001"],
+        "staff_role":  ["DOCTOR"],
+        "permissions_json": ["{\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"emr\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":true,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":true,\"export\":true},\"optical\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"notifications\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"admin\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false}}"]
+      }
+    },
+    {
+      "username": "admin.test@clinica-demo.ro",
+      "email": "admin.test@clinica-demo.ro",
+      "firstName": "Admin",
+      "lastName": "Test",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["TENANT_MEMBER"],
+      "attributes": {
+        "tenant_id":  ["11111111-0000-0000-0000-000000000001"],
+        "staff_id":   ["22222222-0000-0000-0000-000000000002"],
+        "staff_role": ["CLINIC_ADMIN"],
+        "permissions_json": ["{\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"emr\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"optical\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"notifications\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"admin\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true}}"]
+      }
+    }
+  ],
+
+  "browserSecurityHeaders": {
+    "contentTypeOptions": "nosniff",
+    "xRobotsTag": "none",
+    "xFrameOptions": "SAMEORIGIN",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains"
+  },
+
+  "smtpServer": {},
+  "eventsEnabled": false,
+  "adminEventsEnabled": false
+}
