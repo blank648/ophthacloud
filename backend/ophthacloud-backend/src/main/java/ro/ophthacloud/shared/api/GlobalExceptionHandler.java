@@ -78,17 +78,19 @@ public class GlobalExceptionHandler {
                 req.getRequestURI(), requestId(req));
     }
 
-    // ── 404 Not Found ─────────────────────────────────────────────────────────────
-    // Domain-specific *NotFoundException classes are mapped here as they are added per sprint.
-    // Example for PatientNotFoundException (OC-010):
-    //   @ExceptionHandler(PatientNotFoundException.class)
-    //   @ResponseStatus(HttpStatus.NOT_FOUND)
-    //   public ErrorResponse handlePatientNotFound(PatientNotFoundException ex, HttpServletRequest req) {
-    //       return ErrorResponse.of("PATIENT_NOT_FOUND", ex.getMessage(), req.getRequestURI(), requestId(req));
-    //   }
+    // ── Domain Errors ────────────────────────────────────────────────────────
+
+    @ExceptionHandler(DomainException.class)
+    public org.springframework.http.ResponseEntity<ErrorResponse> handleDomainException(
+            DomainException ex,
+            HttpServletRequest req) {
+        log.debug("Domain error on {}: {}", req.getRequestURI(), ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(ex.getErrorCode(), ex.getMessage(), req.getRequestURI(), requestId(req));
+        return org.springframework.http.ResponseEntity.status(ex.getStatus()).body(response);
+    }
 
     // ── 409 Conflict ─────────────────────────────────────────────────────────────
-    // ConsultationAlreadySignedException, DoubleBookingException, etc. registered in later sprints.
+    // ConsultationAlreadySignedException registered in EMR sprint.
 
     // ── 500 Internal Server Error ────────────────────────────────────────────────
 

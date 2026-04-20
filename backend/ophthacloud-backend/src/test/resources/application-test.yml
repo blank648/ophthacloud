@@ -1,0 +1,31 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # 32-char secret (256 bits) — satisfies HS256 RFC 7518 §3.2 minimum.
+          # TestJwtFactory signs tokens with this exact value.
+          secret: "test-secret-key-ophthacloud-dev!"
+
+  # Disable flyway baseline-on-migrate issues in test; Testcontainers starts fresh
+  flyway:
+    baseline-on-migrate: false
+
+  # Keep JPA validation but suppress DDL noise
+  jpa:
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+
+# Suppress noisy Keycloak-related startup warnings in test context
+ophthacloud:
+  keycloak:
+    admin-url: http://localhost:0
+    realm: ophthacloud-test
+    client-id: ophthacloud-backend-test
+    client-secret: not-used-in-tests
+  minio:
+    endpoint: http://localhost:0
+    access-key: test
+    secret-key: test
