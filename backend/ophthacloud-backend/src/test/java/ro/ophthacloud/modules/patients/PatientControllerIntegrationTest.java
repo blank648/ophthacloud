@@ -3,6 +3,7 @@ package ro.ophthacloud.modules.patients;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -42,13 +43,13 @@ class PatientControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("POST /api/v1/patients: should return 201 with MRN matching OC-\\d{6}")
     void createPatient_shouldReturn201_withMrn() {
-        ResponseEntity<Map> response = client.post()
+        ResponseEntity<Map<String, Object>> response = client.post()
                 .uri("/api/v1/patients")
                 .headers(h -> h.addAll(headersForRole("DOCTOR", TENANT_A)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(validCreateRequest("Ion", "Popescu"))
                 .retrieve()
-                .toEntity(Map.class);
+                .toEntity(new ParameterizedTypeReference<Map<String, Object>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
@@ -68,13 +69,13 @@ class PatientControllerIntegrationTest extends BaseIntegrationTest {
                 "gender", "MALE"
         );
 
-        ResponseEntity<Map> response = client.post()
+        ResponseEntity<Map<String, Object>> response = client.post()
                 .uri("/api/v1/patients")
                 .headers(h -> h.addAll(headersForRole("DOCTOR", TENANT_A)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
                 .retrieve()
-                .toEntity(Map.class);
+                .toEntity(new ParameterizedTypeReference<Map<String, Object>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
@@ -89,11 +90,11 @@ class PatientControllerIntegrationTest extends BaseIntegrationTest {
     void getPatient_shouldReturn200_forExistingPatient() {
         UUID patientId = createPatientAndGetId("Maria", "Ionescu", TENANT_A);
 
-        ResponseEntity<Map> response = client.get()
+        ResponseEntity<Map<String, Object>> response = client.get()
                 .uri("/api/v1/patients/{id}", patientId)
                 .headers(h -> h.addAll(headersForRole("DOCTOR", TENANT_A)))
                 .retrieve()
-                .toEntity(Map.class);
+                .toEntity(new ParameterizedTypeReference<Map<String, Object>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
@@ -106,11 +107,11 @@ class PatientControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("GET /api/v1/patients/{id}: should return 404 PATIENT_NOT_FOUND for unknown id")
     void getPatient_shouldReturn404_forUnknownId() {
-        ResponseEntity<Map> response = client.get()
+        ResponseEntity<Map<String, Object>> response = client.get()
                 .uri("/api/v1/patients/{id}", UUID.randomUUID())
                 .headers(h -> h.addAll(headersForRole("DOCTOR", TENANT_A)))
                 .retrieve()
-                .toEntity(Map.class);
+                .toEntity(new ParameterizedTypeReference<Map<String, Object>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
@@ -130,13 +131,13 @@ class PatientControllerIntegrationTest extends BaseIntegrationTest {
         updateReq.setDateOfBirth(LocalDate.of(1985, 6, 15));
         updateReq.setGender(GenderType.MALE);
 
-        ResponseEntity<Map> response = client.put()
+        ResponseEntity<Map<String, Object>> response = client.put()
                 .uri("/api/v1/patients/{id}", patientId)
                 .headers(h -> h.addAll(headersForRole("DOCTOR", TENANT_A)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(updateReq)
                 .retrieve()
-                .toEntity(Map.class);
+                .toEntity(new ParameterizedTypeReference<Map<String, Object>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
@@ -159,11 +160,11 @@ class PatientControllerIntegrationTest extends BaseIntegrationTest {
         assertThat(deleteResp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // Confirm soft-deleted — subsequent GET returns 404
-        ResponseEntity<Map> getResp = client.get()
+        ResponseEntity<Map<String, Object>> getResp = client.get()
                 .uri("/api/v1/patients/{id}", patientId)
                 .headers(h -> h.addAll(headersForRole("DOCTOR", TENANT_A)))
                 .retrieve()
-                .toEntity(Map.class);
+                .toEntity(new ParameterizedTypeReference<Map<String, Object>>() {});
         assertThat(getResp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
@@ -175,11 +176,11 @@ class PatientControllerIntegrationTest extends BaseIntegrationTest {
         createPatientAndGetId("Ion", "Popescu", TENANT_A);
         createPatientAndGetId("Elena", "Ionescu", TENANT_A);
 
-        ResponseEntity<Map> response = client.get()
+        ResponseEntity<Map<String, Object>> response = client.get()
                 .uri("/api/v1/patients?q=Popescu")
                 .headers(h -> h.addAll(headersForRole("DOCTOR", TENANT_A)))
                 .retrieve()
-                .toEntity(Map.class);
+                .toEntity(new ParameterizedTypeReference<Map<String, Object>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<?> data = (List<?>) response.getBody().get("data");
@@ -191,13 +192,13 @@ class PatientControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("RBAC: POST /api/v1/patients with ROLE_RECEPTIONIST should return 403 Forbidden")
     void createPatient_shouldReturn403_forReceptionist() {
-        ResponseEntity<Map> response = client.post()
+        ResponseEntity<Map<String, Object>> response = client.post()
                 .uri("/api/v1/patients")
                 .headers(h -> h.addAll(headersForRole("RECEPTIONIST", TENANT_A)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(validCreateRequest("Ioana", "Dumitrescu"))
                 .retrieve()
-                .toEntity(Map.class);
+                .toEntity(new ParameterizedTypeReference<Map<String, Object>>() {});
 
         // RECEPTIONIST has view=true only; create=false → @PreAuthorize fails → 403
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -211,11 +212,11 @@ class PatientControllerIntegrationTest extends BaseIntegrationTest {
         createPatientAndGetId("Vasile", "Radu", TENANT_A);
 
         // TenantB queries the patient list — Hibernate tenantFilter must hide TENANT_A rows
-        ResponseEntity<Map> response = client.get()
+        ResponseEntity<Map<String, Object>> response = client.get()
                 .uri("/api/v1/patients")
                 .headers(h -> h.addAll(headersForRole("DOCTOR", TENANT_B)))
                 .retrieve()
-                .toEntity(Map.class);
+                .toEntity(new ParameterizedTypeReference<Map<String, Object>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<?> data = (List<?>) response.getBody().get("data");
@@ -236,15 +237,14 @@ class PatientControllerIntegrationTest extends BaseIntegrationTest {
     /**
      * Creates a patient via POST and returns its UUID from the response body.
      */
-    @SuppressWarnings("unchecked")
     private UUID createPatientAndGetId(String firstName, String lastName, UUID tenantId) {
-        Map<?, ?> body = client.post()
+        Map<String, Object> body = client.post()
                 .uri("/api/v1/patients")
                 .headers(h -> h.addAll(headersForRole("DOCTOR", tenantId)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(validCreateRequest(firstName, lastName))
                 .retrieve()
-                .body(Map.class);
+                .body(new ParameterizedTypeReference<Map<String, Object>>() {});
         Map<?, ?> data = (Map<?, ?>) body.get("data");
         return UUID.fromString((String) data.get("id"));
     }

@@ -46,12 +46,14 @@ public abstract class BaseIntegrationTest {
     @ServiceConnection
     @SuppressWarnings("resource")
     static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine");
+            new PostgreSQLContainer<>("postgres:16-alpine")
+                    .withReuse(true);
 
     @Container
     @SuppressWarnings("resource")
     static final GenericContainer<?> REDIS =
-            new GenericContainer<>("redis:7-alpine").withExposedPorts(6379);
+            new GenericContainer<>("redis:7-alpine").withExposedPorts(6379)
+                    .withReuse(true);
 
     // ── Dynamic properties ────────────────────────────────────────────────────
 

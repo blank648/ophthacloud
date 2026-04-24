@@ -35,7 +35,7 @@ class ModuleStructureTest {
     void allModulesShouldBeDetected() {
         // Print module structure for debugging — useful during development
         modules.forEach(module ->
-                System.out.println("Module: " + module.getName() + " — " + module.getBasePackage())
+                System.out.println("Module: " + module.getIdentifier().toString() + " — " + module.getBasePackage())
         );
     }
 }

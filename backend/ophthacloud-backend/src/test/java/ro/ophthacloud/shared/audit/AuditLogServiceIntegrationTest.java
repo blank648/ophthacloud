@@ -4,19 +4,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import ro.ophthacloud.shared.security.ModulePermissions;
 import ro.ophthacloud.shared.security.OphthaClinicalAuthenticationToken;
 import ro.ophthacloud.shared.security.OphthaPrincipal;
+import ro.ophthacloud.shared.test.BaseIntegrationTest;
 
 import java.util.List;
 import java.util.Map;
@@ -35,27 +27,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *   <li>Audit records survive a calling transaction rollback (REQUIRES_NEW)</li>
  * </ul>
  *
- * Uses a real PostgreSQL 16 Testcontainer — no mocking of the DB layer.
+ * Shares the singleton Testcontainers PostgreSQL instance from {@link BaseIntegrationTest}
+ * so that the full suite runs against a single container without port-death across contexts.
  */
-@SpringBootTest
-@Testcontainers
-@ActiveProfiles("test")
-class AuditLogServiceIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    @SuppressWarnings("resource")
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine");
+class AuditLogServiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private AuditLogService auditLogService;
 
     @Autowired
     private AuditLogRepository auditLogRepository;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
 
     private static final UUID TEST_TENANT_ID = UUID.randomUUID();
     private static final String TEST_KEYCLOAK_USER_ID = UUID.randomUUID().toString();
@@ -64,8 +45,8 @@ class AuditLogServiceIntegrationTest {
     // ── Setup ─────────────────────────────────────────────────────────────────
 
     @BeforeEach
-    void setUp() {
-        jdbcTemplate.execute("TRUNCATE TABLE audit_log CASCADE");
+    void setUpAudit() {
+        // BaseIntegrationTest.setUp() already truncates audit_log via dbCleanup()
         setSecurityContext(TEST_TENANT_ID, TEST_KEYCLOAK_USER_ID, TEST_STAFF_ID, "DOCTOR");
         ensureTenantExists(TEST_TENANT_ID);
     }
@@ -224,22 +205,5 @@ class AuditLogServiceIntegrationTest {
         OphthaClinicalAuthenticationToken auth =
                 new OphthaClinicalAuthenticationToken(principal, null, List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
-    }
-
-    /**
-     * Ensures the test tenant row exists in {@code tenants} so foreign-key constraints pass.
-     * Uses INSERT ... ON CONFLICT DO NOTHING to be idempotent across test runs.
-     */
-    private void ensureTenantExists(UUID tenantId) {
-        jdbcTemplate.update("""
-                INSERT INTO tenants (id, slug, name, keycloak_realm)
-                VALUES (?, ?, ?, ?)
-                ON CONFLICT (id) DO NOTHING
-                """,
-                tenantId,
-                "test-clinic-" + tenantId.toString().substring(0, 8),
-                "Test Clinic",
-                "ophthacloud-test"
-        );
     }
 }

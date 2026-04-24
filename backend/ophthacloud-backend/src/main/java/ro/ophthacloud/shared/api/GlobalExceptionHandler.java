@@ -89,8 +89,17 @@ public class GlobalExceptionHandler {
         return org.springframework.http.ResponseEntity.status(ex.getStatus()).body(response);
     }
 
+    // ── 422 Unprocessable Entity ──────────────────────────────────────────────
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ErrorResponse handleIllegalState(IllegalStateException ex, HttpServletRequest req) {
+        log.debug("Business rule violation on {}: {}", req.getRequestURI(), ex.getMessage());
+        return ErrorResponse.of("PRECONDITION_FAILED", ex.getMessage(), req.getRequestURI(), requestId(req));
+    }
+
     // ── 409 Conflict ─────────────────────────────────────────────────────────────
-    // ConsultationAlreadySignedException registered in EMR sprint.
+    // ConsultationAlreadySignedException registered in EMR sprint via DomainException hierarchy.
 
     // ── 500 Internal Server Error ────────────────────────────────────────────────
 

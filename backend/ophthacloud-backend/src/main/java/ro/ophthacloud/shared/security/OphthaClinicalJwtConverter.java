@@ -72,7 +72,6 @@ public class OphthaClinicalJwtConverter implements Converter<Jwt, AbstractAuthen
      * </pre>
      * If the claim is absent or malformed, returns an empty map (deny-all for all modules).
      */
-    @SuppressWarnings("unchecked")
     private Map<String, ModulePermissions> parsePermissions(Jwt jwt) {
         Object raw = jwt.getClaims().get("permissions");
         if (raw == null) {

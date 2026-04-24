@@ -1,12 +1,15 @@
 package ro.ophthacloud;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+import ro.ophthacloud.shared.test.BaseIntegrationTest;
 
-@Import(TestcontainersConfiguration.class)
-@SpringBootTest
-class OphthacloudBackendApplicationTests {
+/**
+ * Smoke test — verifies the full Spring application context loads cleanly.
+ * <p>
+ * Inherits the singleton Testcontainers PostgreSQL + Redis instance from
+ * {@link BaseIntegrationTest} so no separate context or container is created.
+ */
+class OphthacloudBackendApplicationTests extends BaseIntegrationTest {
 
     @Test
     void contextLoads() {
