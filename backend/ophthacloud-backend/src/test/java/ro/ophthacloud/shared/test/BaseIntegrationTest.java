@@ -12,7 +12,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.client.RestClient;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -45,8 +45,8 @@ public abstract class BaseIntegrationTest {
     @Container
     @ServiceConnection
     @SuppressWarnings("resource")
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine")
+    static final PostgreSQLContainer POSTGRES =
+            new PostgreSQLContainer("postgres:16-alpine")
                     .withReuse(true);
 
     @Container
@@ -99,9 +99,26 @@ public abstract class BaseIntegrationTest {
      * Truncates test-relevant tables in FK-safe order.
      * Wrapped in try/catch so tables absent in early sprints don't fail the suite.
      */
-    void dbCleanup() {
+    protected void dbCleanup() {
         for (String table : new String[]{
-                "appointments", "blocked_slots", "appointment_types", "patients", "audit_log"}) {
+                // Sprint 6: prescriptions
+                "prescription_lines",
+                "prescriptions",
+                // Sprint 6: investigations
+                "investigation_files",
+                "investigations",
+                // Sprint 5: EMR
+                "consultation_sections",
+                "consultations",
+                // Sprint 4: appointments / patients
+                "appointments",
+                "blocked_slots",
+                "appointment_types",
+                "patient_medical_history",
+                "patient_consents",
+                "patient_attachments",
+                "patients",
+                "audit_log"}) {
             try {
                 jdbcTemplate.execute("TRUNCATE TABLE " + table + " CASCADE");
             } catch (Exception ignored) { /* table may not exist yet */ }

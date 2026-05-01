@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
     // ── 422 Unprocessable Entity ──────────────────────────────────────────────
 
     @ExceptionHandler(IllegalStateException.class)
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_CONTENT)
     public ErrorResponse handleIllegalState(IllegalStateException ex, HttpServletRequest req) {
         log.debug("Business rule violation on {}: {}", req.getRequestURI(), ex.getMessage());
         return ErrorResponse.of("PRECONDITION_FAILED", ex.getMessage(), req.getRequestURI(), requestId(req));

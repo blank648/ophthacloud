@@ -1,6 +1,5 @@
 package ro.ophthacloud.modules.patients.dto;
 
-import ro.ophthacloud.modules.patients.dto.ActiveDiagnosis;
 import ro.ophthacloud.modules.patients.internal.PatientEntity;
 import ro.ophthacloud.shared.enums.GenderType;
 

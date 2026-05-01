@@ -26,6 +26,7 @@ ophthacloud:
     client-id: ophthacloud-backend-test
     client-secret: not-used-in-tests
   minio:
-    endpoint: http://localhost:0
-    access-key: test
-    secret-key: test
+    endpoint: http://localhost:9000
+    access-key: test-access
+    secret-key: test-secret-key-12345
+    bucket-name: ophthacloud-test
