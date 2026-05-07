@@ -101,6 +101,13 @@ public abstract class BaseIntegrationTest {
      */
     protected void dbCleanup() {
         for (String table : new String[]{
+                // Sprint 7: optical ERP (FK-safe order: lines before headers, items before orders)
+                "invoice_lines",
+                "invoices",
+                "optical_order_items",
+                "optical_orders",
+                "stock_items",
+                "service_catalog",
                 // Sprint 6: prescriptions
                 "prescription_lines",
                 "prescriptions",

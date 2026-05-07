@@ -10,6 +10,7 @@ spring:
   # Disable flyway baseline-on-migrate issues in test; Testcontainers starts fresh
   flyway:
     baseline-on-migrate: false
+    validate-on-migrate: false
 
   # Keep JPA validation but suppress DDL noise
   jpa:

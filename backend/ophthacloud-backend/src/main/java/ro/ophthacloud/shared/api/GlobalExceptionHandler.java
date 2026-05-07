@@ -100,6 +100,7 @@ public class GlobalExceptionHandler {
 
     // ── 409 Conflict ─────────────────────────────────────────────────────────────
     // ConsultationAlreadySignedException registered in EMR sprint via DomainException hierarchy.
+    // OpticalDomainException registered in Sprint 7 via DomainException hierarchy.
 
     // ── 500 Internal Server Error ────────────────────────────────────────────────
 
