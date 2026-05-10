@@ -23,7 +23,6 @@ import ro.ophthacloud.modules.investigations.event.InvestigationResultAvailableE
 import ro.ophthacloud.modules.investigations.internal.*;
 
 import java.lang.reflect.Field;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

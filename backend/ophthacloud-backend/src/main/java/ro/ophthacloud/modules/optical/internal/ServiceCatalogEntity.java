@@ -10,8 +10,8 @@ import lombok.Setter;
 import lombok.ToString;
 import ro.ophthacloud.infrastructure.persistence.TenantAwareEntity;
 
+
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Entity
 @Table(name = "service_catalog")

@@ -15,7 +15,6 @@ import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineRequest;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionVerifyDto;
 import ro.ophthacloud.modules.prescriptions.event.PrescriptionSignedEvent;
-import ro.ophthacloud.shared.tenant.TenantContext;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

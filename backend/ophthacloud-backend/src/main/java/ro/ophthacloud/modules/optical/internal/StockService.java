@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ro.ophthacloud.modules.optical.event.LowStockAlertEvent;
 import ro.ophthacloud.modules.optical.dto.StockItemDto;
-import ro.ophthacloud.shared.api.DomainException;
 
 import java.util.List;
 import java.util.UUID;

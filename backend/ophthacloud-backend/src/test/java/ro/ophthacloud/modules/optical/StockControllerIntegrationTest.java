@@ -7,11 +7,9 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import ro.ophthacloud.modules.optical.dto.StockItemDto;
 import ro.ophthacloud.modules.optical.dto.UpdateStockRequest;
 import ro.ophthacloud.shared.test.BaseIntegrationTest;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

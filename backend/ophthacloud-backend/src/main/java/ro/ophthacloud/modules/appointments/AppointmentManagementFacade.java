@@ -15,7 +15,6 @@ import ro.ophthacloud.modules.patients.PatientManagementFacade;
 import ro.ophthacloud.modules.patients.dto.PatientDto;
 import ro.ophthacloud.shared.audit.AuditEntry;
 import ro.ophthacloud.shared.audit.AuditLogService;
-import ro.ophthacloud.shared.enums.AppointmentChannel;
 import ro.ophthacloud.shared.enums.AppointmentStatus;
 import ro.ophthacloud.shared.security.SecurityUtils;
 

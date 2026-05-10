@@ -1,6 +1,5 @@
 package ro.ophthacloud.modules.appointments.dto;
 
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;

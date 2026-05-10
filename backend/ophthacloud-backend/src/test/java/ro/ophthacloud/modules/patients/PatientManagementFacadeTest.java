@@ -21,7 +21,6 @@ import ro.ophthacloud.modules.patients.dto.PatientDto;
 import ro.ophthacloud.modules.patients.event.PatientCreatedEvent;
 import ro.ophthacloud.modules.patients.internal.PatientEntity;
 import ro.ophthacloud.modules.patients.internal.PatientMedicalHistoryEntity;
-import ro.ophthacloud.modules.patients.PatientNotFoundException;
 import ro.ophthacloud.modules.patients.internal.PatientRepository;
 import ro.ophthacloud.shared.audit.AuditEntry;
 import ro.ophthacloud.shared.audit.AuditLogService;

@@ -7,7 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ro.ophthacloud.modules.appointments.internal.AppointmentRepository;
 import ro.ophthacloud.modules.emr.dto.*;
 import ro.ophthacloud.modules.emr.event.ConsultationSignedEvent;
 import ro.ophthacloud.shared.audit.AuditEntry;

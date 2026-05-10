@@ -11,7 +11,6 @@ import ro.ophthacloud.modules.optical.dto.CreateInvoiceRequest;
 import ro.ophthacloud.modules.optical.dto.PayInvoiceRequest;
 import ro.ophthacloud.shared.test.BaseIntegrationTest;
 
-import java.math.BigDecimal;
 import java.util.Map;
 import java.util.UUID;
 

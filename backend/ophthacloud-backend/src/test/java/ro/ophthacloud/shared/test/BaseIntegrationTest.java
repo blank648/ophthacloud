@@ -77,6 +77,9 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    protected org.springframework.mail.javamail.JavaMailSender javaMailSender;
+
     /** Spring RestClient — fault-tolerant (does not throw on 4xx/5xx). */
     protected RestClient client;
 
@@ -169,5 +172,17 @@ public abstract class BaseIntegrationTest {
                 "Test Clinic",
                 "ophthacloud-test"
         );
+    }
+
+    /**
+     * Executes the given {@link java.util.function.Supplier} with the specified tenant ID set in {@link ro.ophthacloud.shared.tenant.TenantContext}.
+     */
+    protected <T> T runAsTenant(UUID tenantId, java.util.function.Supplier<T> action) {
+        try {
+            ro.ophthacloud.shared.tenant.TenantContext.set(tenantId);
+            return action.get();
+        } finally {
+            ro.ophthacloud.shared.tenant.TenantContext.clear();
+        }
     }
 }

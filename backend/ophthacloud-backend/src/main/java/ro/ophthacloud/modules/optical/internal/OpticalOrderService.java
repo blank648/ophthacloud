@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import ro.ophthacloud.modules.optical.dto.*;
 import ro.ophthacloud.modules.optical.event.*;
-import ro.ophthacloud.shared.api.DomainException;
 
 import java.math.BigDecimal;
 import java.time.Instant;

@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import ro.ophthacloud.modules.optical.dto.InvoiceDto;
 import ro.ophthacloud.modules.optical.dto.PayInvoiceRequest;
-import ro.ophthacloud.shared.api.DomainException;
 
 import java.time.Instant;
 import java.util.UUID;

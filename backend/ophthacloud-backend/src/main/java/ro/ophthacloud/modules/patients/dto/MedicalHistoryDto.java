@@ -1,6 +1,6 @@
 package ro.ophthacloud.modules.patients.dto;
 
-import ro.ophthacloud.modules.patients.dto.ActiveDiagnosis;
+
 import ro.ophthacloud.modules.patients.internal.PatientMedicalHistoryEntity;
 
 import java.util.List;
