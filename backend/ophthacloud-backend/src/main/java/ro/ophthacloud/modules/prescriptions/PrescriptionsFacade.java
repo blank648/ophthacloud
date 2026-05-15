@@ -9,6 +9,7 @@ import ro.ophthacloud.modules.prescriptions.dto.PrescriptionDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionVerifyDto;
 import ro.ophthacloud.modules.prescriptions.internal.PrescriptionService;
 import ro.ophthacloud.modules.prescriptions.internal.PrescriptionStatusType;
+import ro.ophthacloud.shared.api.PdfDownloadResponse;
 
 import java.util.UUID;
 
@@ -42,5 +43,9 @@ public class PrescriptionsFacade {
 
     public PrescriptionVerifyDto verifyByQrToken(UUID qrToken) {
         return prescriptionService.verifyByQrToken(qrToken);
+    }
+
+    public PdfDownloadResponse generatePdf(UUID tenantId, UUID id) {
+        return prescriptionService.generatePdf(tenantId, id);
     }
 }

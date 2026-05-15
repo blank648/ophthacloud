@@ -15,6 +15,9 @@ import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineRequest;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionVerifyDto;
 import ro.ophthacloud.modules.prescriptions.event.PrescriptionSignedEvent;
+import ro.ophthacloud.shared.api.PdfDownloadResponse;
+import ro.ophthacloud.shared.util.DocumentStorageService;
+import ro.ophthacloud.shared.util.PdfGenerationService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -30,11 +33,15 @@ public class PrescriptionService {
 
     private static final String QR_BASE_URL = "https://app.ophthacloud.ro/verify/";
 
+    private static final String MINIO_BUCKET = "generated-documents";
+
     private final PrescriptionRepository prescriptionRepository;
     private final PrescriptionLineRepository prescriptionLineRepository;
     private final PrescriptionNumberGenerator numberGenerator;
     private final ApplicationEventPublisher eventPublisher;
     private final JdbcTemplate jdbcTemplate;
+    private final PdfGenerationService pdfGenerationService;
+    private final DocumentStorageService documentStorageService;
 
     // ── Create ──────────────────────────────────────────────────────────────
 
@@ -230,6 +237,86 @@ public class PrescriptionService {
         expired.forEach(p -> p.setStatus(PrescriptionStatusType.EXPIRED));
         prescriptionRepository.saveAll(expired);
         log.info("expireOverduePrescriptions: expired {} prescriptions", expired.size());
+    }
+
+    // ── PDF Generation ──────────────────────────────────────────────────────
+
+    /**
+     * Generates (or retrieves cached) prescription PDF.
+     * Cache-on-generate: stores pdfPath on entity after first generation.
+     * Returns presigned MinIO URL with 1-hour expiry.
+     */
+    @Transactional
+    public PdfDownloadResponse generatePdf(UUID tenantId, UUID id) {
+        PrescriptionEntity entity = getEntityOrThrow(tenantId, id);
+
+        // Cache-on-generate: if already generated, return presigned URL
+        if (entity.getPdfPath() != null && !entity.getPdfPath().isBlank()) {
+            String url = documentStorageService.generatePresignedUrl(MINIO_BUCKET, entity.getPdfPath(), 1);
+            return new PdfDownloadResponse(url, Instant.now().plusSeconds(3600));
+        }
+
+        // Fetch cross-module data via JDBC (same pattern as verifyByQrToken)
+        String[] patientData = jdbcTemplate.queryForObject(
+                "SELECT first_name || ' ' || last_name, date_of_birth::text, mrn FROM patients WHERE id = ? AND tenant_id = ?",
+                (rs, row) -> new String[]{rs.getString(1), rs.getString(2), rs.getString(3)},
+                entity.getPatientId(), tenantId);
+
+        String clinicName = jdbcTemplate.queryForObject(
+                "SELECT name FROM tenants WHERE id = ?",
+                String.class, tenantId);
+
+        List<PrescriptionLineEntity> lines = prescriptionLineRepository
+                .findByTenantIdAndPrescriptionId(tenantId, id);
+
+        // Map lines to PDF data records
+        List<PdfGenerationService.RefractionLine> pdfLines = lines.stream()
+                .map(line -> new PdfGenerationService.RefractionLine(
+                        line.getEye(),
+                        line.getSph(),
+                        line.getCyl(),
+                        line.getAxis(),
+                        line.getAddPower(),
+                        line.getVaCc(),
+                        line.getBcva(),
+                        line.getSeq()
+                ))
+                .toList();
+
+        // Generate PDF
+        byte[] pdfBytes = pdfGenerationService.generatePrescriptionPdf(
+                clinicName,
+                entity.getIssuedByName(),
+                patientData != null ? patientData[0] : null,
+                patientData != null ? patientData[1] : null,
+                patientData != null ? patientData[2] : null,
+                entity.getPrescriptionNumber(),
+                entity.getPrescriptionType().name(),
+                entity.getValidFrom(),
+                entity.getValidUntil(),
+                entity.getPdBinocular(),
+                entity.getPdOd(),
+                entity.getPdOs(),
+                entity.getLensType() != null ? entity.getLensType().name() : null,
+                entity.getLensMaterial(),
+                entity.getLensCoating(),
+                entity.getClinicalNotes(),
+                entity.getPatientInstructions(),
+                entity.getQrCodeToken().toString(),
+                pdfLines
+        );
+
+        // Upload to MinIO
+        String objectPath = tenantId + "/prescriptions/" + id + ".pdf";
+        documentStorageService.upload(MINIO_BUCKET, objectPath, pdfBytes, "application/pdf");
+
+        // Cache the path on entity
+        entity.setPdfPath(objectPath);
+        prescriptionRepository.save(entity);
+
+        String url = documentStorageService.generatePresignedUrl(MINIO_BUCKET, objectPath, 1);
+        log.info("generatePdf: prescription={}, size={} bytes", id, pdfBytes.length);
+        return new PdfDownloadResponse(url, Instant.now().plusSeconds(3600));
     }
 
     // ── Private Helpers ──────────────────────────────────────────────────────

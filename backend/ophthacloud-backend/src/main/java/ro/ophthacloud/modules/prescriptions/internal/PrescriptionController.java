@@ -15,6 +15,7 @@ import ro.ophthacloud.modules.prescriptions.dto.PrescriptionDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionVerifyDto;
 import ro.ophthacloud.shared.api.ApiResponse;
 import ro.ophthacloud.shared.api.PagedApiResponse;
+import ro.ophthacloud.shared.api.PdfDownloadResponse;
 import ro.ophthacloud.shared.security.SecurityUtils;
 
 import java.util.Map;
@@ -84,6 +85,15 @@ public class PrescriptionController {
 
         UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
         return ApiResponse.of(facade.cancelPrescription(tenantId, id));
+    }
+
+    // ── PDF Download ──────────────────────────────────────────────────────
+
+    @GetMapping("/api/v1/prescriptions/{id}/pdf")
+    @PreAuthorize("hasPermission('prescriptions', 'MODULE', 'VIEW')")
+    public ApiResponse<PdfDownloadResponse> getPrescriptionPdf(@PathVariable UUID id) {
+        UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
+        return ApiResponse.of(facade.generatePdf(tenantId, id));
     }
 
     // ── Public QR Verification (no auth) ────────────────────────────────────

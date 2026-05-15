@@ -10,6 +10,7 @@ import ro.ophthacloud.modules.optical.dto.InvoiceDto;
 import ro.ophthacloud.modules.optical.dto.PayInvoiceRequest;
 import ro.ophthacloud.shared.tenant.TenantContext;
 import ro.ophthacloud.shared.api.ApiResponse;
+import ro.ophthacloud.shared.api.PdfDownloadResponse;
 import ro.ophthacloud.shared.security.SecurityUtils;
 
 import java.util.UUID;
@@ -43,5 +44,11 @@ public class InvoiceController {
     @PreAuthorize("hasPermission('optical', 'MODULE', 'EDIT')")
     public ApiResponse<InvoiceDto> payInvoice(@PathVariable UUID id, @RequestBody @Valid PayInvoiceRequest request) {
         return ApiResponse.of(invoiceService.payInvoice(TenantContext.require(), id, request));
+    }
+
+    @GetMapping("/{id}/pdf")
+    @PreAuthorize("hasPermission('optical', 'MODULE', 'VIEW')")
+    public ApiResponse<PdfDownloadResponse> getInvoicePdf(@PathVariable UUID id) {
+        return ApiResponse.of(invoiceService.generatePdf(TenantContext.require(), id));
     }
 }
