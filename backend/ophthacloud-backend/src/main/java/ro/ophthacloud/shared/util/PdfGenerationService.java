@@ -39,17 +39,17 @@ public class PdfGenerationService {
     private static final ZoneId BUCHAREST = ZoneId.of("Europe/Bucharest");
 
     // Fonts
-    private static final Font FONT_TITLE = new Font(Font.HELVETICA, 16, Font.BOLD, Color.BLACK);
+    private static final Color HEADER_BG = new Color(41, 98, 255);      // Blue header
+    private static final Color TABLE_HEADER_BG = new Color(230, 236, 255); // Light blue
+    private static final Color OD_COLOR = new Color(220, 53, 69);       // Red for OD
+    private static final Color OS_COLOR = new Color(0, 123, 255);       // Blue for OS
+
+    private static final Font FONT_TITLE = new Font(Font.HELVETICA, 16, Font.BOLD, HEADER_BG);
     private static final Font FONT_SUBTITLE = new Font(Font.HELVETICA, 12, Font.BOLD, Color.DARK_GRAY);
     private static final Font FONT_HEADER = new Font(Font.HELVETICA, 10, Font.BOLD, Color.BLACK);
     private static final Font FONT_BODY = new Font(Font.HELVETICA, 10, Font.NORMAL, Color.BLACK);
     private static final Font FONT_SMALL = new Font(Font.HELVETICA, 8, Font.NORMAL, Color.GRAY);
     private static final Font FONT_MONO = new Font(Font.COURIER, 10, Font.NORMAL, Color.BLACK);
-
-    private static final Color HEADER_BG = new Color(41, 98, 255);      // Blue header
-    private static final Color TABLE_HEADER_BG = new Color(230, 236, 255); // Light blue
-    private static final Color OD_COLOR = new Color(220, 53, 69);       // Red for OD
-    private static final Color OS_COLOR = new Color(0, 123, 255);       // Blue for OS
 
     private final QrCodeGenerator qrCodeGenerator;
 
