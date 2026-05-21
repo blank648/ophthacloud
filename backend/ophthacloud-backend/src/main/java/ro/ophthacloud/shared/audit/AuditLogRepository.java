@@ -82,6 +82,15 @@ public interface AuditLogRepository extends JpaRepository<AuditLogEntity, UUID> 
      * @param pageable pagination parameters
      * @return page of audit log entries ordered newest-first
      */
+    /**
+     * Time-range audit query for reporting (e.g., daily/weekly audit reports).
+     *
+     * @param tenantId the owning tenant
+     * @param from     inclusive start timestamp
+     * @param to       exclusive end timestamp
+     * @param pageable pagination parameters
+     * @return page of audit log entries ordered newest-first
+     */
     @Query("""
             SELECT a FROM AuditLogEntity a
             WHERE a.tenantId  = :tenantId
@@ -93,6 +102,49 @@ public interface AuditLogRepository extends JpaRepository<AuditLogEntity, UUID> 
             @Param("tenantId") UUID    tenantId,
             @Param("from")     Instant from,
             @Param("to")       Instant to,
+            Pageable pageable
+    );
+
+    /**
+     * Returns audit records for a specific entity type within a tenant.
+     *
+     * @param tenantId   the owning tenant
+     * @param entityType simple class name (e.g. {@code "Patient"})
+     * @param pageable   pagination parameters
+     * @return page of audit log entries ordered newest-first
+     */
+    @Query("""
+            SELECT a FROM AuditLogEntity a
+            WHERE a.tenantId   = :tenantId
+              AND a.entityType = :entityType
+            ORDER BY a.createdAt DESC
+            """)
+    Page<AuditLogEntity> findByTenantIdAndEntityType(
+            @Param("tenantId")   UUID   tenantId,
+            @Param("entityType") String entityType,
+            Pageable pageable
+    );
+
+    /**
+     * Returns audit records for a specific entity type + entity ID within a tenant.
+     *
+     * @param tenantId   the owning tenant
+     * @param entityType simple class name (e.g. {@code "Patient"})
+     * @param entityId   the entity's UUID
+     * @param pageable   pagination parameters
+     * @return page of audit log entries ordered newest-first
+     */
+    @Query("""
+            SELECT a FROM AuditLogEntity a
+            WHERE a.tenantId   = :tenantId
+              AND a.entityType = :entityType
+              AND a.entityId   = :entityId
+            ORDER BY a.createdAt DESC
+            """)
+    Page<AuditLogEntity> findByTenantIdAndEntityTypeAndEntityId(
+            @Param("tenantId")   UUID   tenantId,
+            @Param("entityType") String entityType,
+            @Param("entityId")   UUID   entityId,
             Pageable pageable
     );
 }
