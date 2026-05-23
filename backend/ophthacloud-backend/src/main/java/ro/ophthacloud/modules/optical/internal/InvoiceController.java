@@ -15,9 +15,13 @@ import ro.ophthacloud.shared.security.SecurityUtils;
 
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/v1/optical/invoices")
 @RequiredArgsConstructor
+@Tag(name = "Optical / Invoices", description = "Endpoints for managing optical shop invoices")
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
@@ -25,6 +29,7 @@ public class InvoiceController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasPermission('optical', 'MODULE', 'CREATE')")
+    @Operation(summary = "Create an invoice for an optical order")
     public ApiResponse<InvoiceDto> createInvoice(@RequestBody @Valid CreateInvoiceRequest request) {
         return ApiResponse.of(invoiceService.createInvoice(
                 TenantContext.require(),
@@ -36,18 +41,21 @@ public class InvoiceController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasPermission('optical', 'MODULE', 'VIEW')")
+    @Operation(summary = "Get invoice by ID")
     public ApiResponse<InvoiceDto> getInvoice(@PathVariable UUID id) {
         return ApiResponse.of(invoiceService.getInvoice(TenantContext.require(), id));
     }
 
     @PatchMapping("/{id}/pay")
     @PreAuthorize("hasPermission('optical', 'MODULE', 'EDIT')")
+    @Operation(summary = "Record payment for an invoice")
     public ApiResponse<InvoiceDto> payInvoice(@PathVariable UUID id, @RequestBody @Valid PayInvoiceRequest request) {
         return ApiResponse.of(invoiceService.payInvoice(TenantContext.require(), id, request));
     }
 
     @GetMapping("/{id}/pdf")
     @PreAuthorize("hasPermission('optical', 'MODULE', 'VIEW')")
+    @Operation(summary = "Download invoice as PDF")
     public ApiResponse<PdfDownloadResponse> getInvoicePdf(@PathVariable UUID id) {
         return ApiResponse.of(invoiceService.generatePdf(TenantContext.require(), id));
     }

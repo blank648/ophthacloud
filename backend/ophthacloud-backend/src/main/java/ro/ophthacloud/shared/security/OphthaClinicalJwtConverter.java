@@ -32,9 +32,10 @@ public class OphthaClinicalJwtConverter implements Converter<Jwt, AbstractAuthen
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
-        String tenantId  = jwt.getClaimAsString("tenant_id");
-        String staffId   = jwt.getClaimAsString("staff_id");
-        String staffRole = jwt.getClaimAsString("staff_role");
+        String tenantId   = jwt.getClaimAsString("tenant_id");
+        String staffId    = jwt.getClaimAsString("staff_id");
+        String patientId  = jwt.getClaimAsString("patient_id");
+        String staffRole  = jwt.getClaimAsString("staff_role");
 
         // GUIDE_05 §4.2 — mandatory claim: any token without tenant_id is rejected
         if (tenantId == null || tenantId.isBlank()) {
@@ -48,13 +49,15 @@ public class OphthaClinicalJwtConverter implements Converter<Jwt, AbstractAuthen
                 jwt.getSubject(),
                 tenantId,
                 staffId,
+                patientId,
                 staffRole,
                 permissions
         );
 
         Collection<GrantedAuthority> authorities = buildAuthorities(staffRole);
 
-        log.debug("JWT converted: subject={}, tenantId={}, staffRole={}", jwt.getSubject(), tenantId, staffRole);
+        log.debug("JWT converted: subject={}, tenantId={}, staffRole={}, patientId={}",
+                jwt.getSubject(), tenantId, staffRole, patientId);
         return new OphthaClinicalAuthenticationToken(principal, jwt, authorities);
     }
 

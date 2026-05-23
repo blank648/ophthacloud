@@ -159,6 +159,19 @@ public abstract class BaseIntegrationTest {
     }
 
     /**
+     * Builds {@link HttpHeaders} with a signed HS256 Bearer JWT for a portal patient.
+     *
+     * @param patientId the patient UUID string embedded as {@code patient_id} claim
+     * @param tenantId  tenant UUID embedded in the JWT {@code tenant_id} claim
+     */
+    protected HttpHeaders headersForPatient(String patientId, UUID tenantId) {
+        String token = TestJwtFactory.createPatientToken(patientId, tenantId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        return headers;
+    }
+
+    /**
      * Inserts a minimal tenant row — idempotent (ON CONFLICT DO NOTHING).
      */
     protected void ensureTenantExists(UUID tenantId) {

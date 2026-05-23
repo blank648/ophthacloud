@@ -13,6 +13,7 @@ import ro.ophthacloud.modules.prescriptions.PrescriptionsFacade;
 import ro.ophthacloud.modules.prescriptions.dto.CreatePrescriptionRequest;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionVerifyDto;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionStatusType;
 import ro.ophthacloud.shared.api.ApiResponse;
 import ro.ophthacloud.shared.api.PagedApiResponse;
 import ro.ophthacloud.shared.api.PdfDownloadResponse;
@@ -21,8 +22,12 @@ import ro.ophthacloud.shared.security.SecurityUtils;
 import java.util.Map;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Prescriptions", description = "Endpoints for managing medical prescriptions")
 public class PrescriptionController {
 
     private final PrescriptionsFacade facade;
@@ -31,6 +36,7 @@ public class PrescriptionController {
 
     @GetMapping("/api/v1/prescriptions")
     @PreAuthorize("hasPermission('prescriptions', 'MODULE', 'VIEW') or hasPermission('prescriptions', 'MODULE', 'SIGN')")
+    @Operation(summary = "List prescriptions for a patient")
     public PagedApiResponse<PrescriptionDto> listPrescriptions(
             @RequestParam UUID patientId,
             @RequestParam(required = false) PrescriptionStatusType status,
@@ -46,6 +52,7 @@ public class PrescriptionController {
     @PostMapping("/api/v1/prescriptions")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasPermission('prescriptions', 'MODULE', 'CREATE')")
+    @Operation(summary = "Create a draft prescription")
     public ApiResponse<PrescriptionDto> createPrescription(@Valid @RequestBody CreatePrescriptionRequest request) {
         UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
         ro.ophthacloud.shared.security.OphthaPrincipal principal = SecurityUtils.currentPrincipal();
@@ -58,6 +65,7 @@ public class PrescriptionController {
 
     @GetMapping("/api/v1/prescriptions/{id}")
     @PreAuthorize("hasPermission('prescriptions', 'MODULE', 'VIEW') or hasPermission('prescriptions', 'MODULE', 'SIGN')")
+    @Operation(summary = "Get prescription by ID")
     public ApiResponse<PrescriptionDto> getPrescription(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
         return ApiResponse.of(facade.getPrescription(tenantId, id));
@@ -65,6 +73,7 @@ public class PrescriptionController {
 
     @PostMapping("/api/v1/prescriptions/{id}/sign")
     @PreAuthorize("hasPermission('prescriptions', 'MODULE', 'SIGN')")
+    @Operation(summary = "Sign a draft prescription")
     public ApiResponse<PrescriptionDto> signPrescription(
             @PathVariable UUID id,
             @RequestBody Map<String, Boolean> body) {
@@ -79,6 +88,7 @@ public class PrescriptionController {
 
     @PostMapping("/api/v1/prescriptions/{id}/cancel")
     @PreAuthorize("hasPermission('prescriptions', 'MODULE', 'EDIT')")
+    @Operation(summary = "Cancel an active prescription")
     public ApiResponse<PrescriptionDto> cancelPrescription(
             @PathVariable UUID id,
             @RequestBody(required = false) Map<String, String> body) {
@@ -91,6 +101,7 @@ public class PrescriptionController {
 
     @GetMapping("/api/v1/prescriptions/{id}/pdf")
     @PreAuthorize("hasPermission('prescriptions', 'MODULE', 'VIEW')")
+    @Operation(summary = "Download prescription as PDF")
     public ApiResponse<PdfDownloadResponse> getPrescriptionPdf(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
         return ApiResponse.of(facade.generatePdf(tenantId, id));
@@ -99,6 +110,7 @@ public class PrescriptionController {
     // ── Public QR Verification (no auth) ────────────────────────────────────
 
     @GetMapping("/api/v1/public/prescriptions/verify/{qrToken}")
+    @Operation(summary = "Publicly verify a prescription by QR token")
     public ApiResponse<PrescriptionVerifyDto> verifyPrescription(@PathVariable UUID qrToken) {
         return ApiResponse.of(facade.verifyByQrToken(qrToken));
     }

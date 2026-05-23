@@ -13,14 +13,16 @@ import java.util.Map;
  *
  * @param keycloakUserId Keycloak user UUID (the {@code sub} claim)
  * @param tenantId       Tenant UUID as string (the {@code tenant_id} custom claim) — never null for clinic users
- * @param staffId        Internal staff UUID (the {@code staff_id} custom claim) — may be null for system tokens
- * @param staffRole      Staff role string (the {@code staff_role} custom claim, e.g. {@code "DOCTOR"})
+ * @param staffId        Internal staff UUID (the {@code staff_id} custom claim) — may be null for patient tokens
+ * @param patientId      Patient UUID (the {@code patient_id} custom claim) — null for clinic staff, non-null for portal patients
+ * @param staffRole      Staff role string (the {@code staff_role} custom claim, e.g. {@code "DOCTOR"} or {@code "PATIENT"})
  * @param permissions    Per-module permissions map, keyed by module code (e.g. {@code "patients"})
  */
 public record OphthaPrincipal(
         String keycloakUserId,
         String tenantId,
         String staffId,
+        String patientId,
         String staffRole,
         Map<String, ModulePermissions> permissions
 ) implements java.security.Principal {
@@ -29,11 +31,19 @@ public record OphthaPrincipal(
     public String getName() {
         return keycloakUserId;
     }
+
     /**
      * Returns the permissions for a specific module, or {@link ModulePermissions#NONE} if the
      * module is not present in the JWT (deny-by-default).
      */
     public ModulePermissions permissionsFor(String moduleCode) {
         return permissions.getOrDefault(moduleCode, ModulePermissions.NONE);
+    }
+
+    /**
+     * Returns {@code true} if this principal represents a portal patient (has {@code patient_id}, role is PATIENT).
+     */
+    public boolean isPatient() {
+        return "PATIENT".equals(staffRole) && patientId != null;
     }
 }

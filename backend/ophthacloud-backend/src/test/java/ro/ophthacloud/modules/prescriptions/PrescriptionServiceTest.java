@@ -20,7 +20,11 @@ import ro.ophthacloud.modules.prescriptions.dto.CreatePrescriptionRequest;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineRequest;
 import ro.ophthacloud.modules.prescriptions.event.PrescriptionSignedEvent;
+import ro.ophthacloud.modules.prescriptions.enums.LensType;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionStatusType;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionType;
 import ro.ophthacloud.modules.prescriptions.internal.*;
+import ro.ophthacloud.shared.audit.AuditLogService;
 import ro.ophthacloud.shared.security.ModulePermissions;
 import ro.ophthacloud.shared.security.OphthaClinicalAuthenticationToken;
 import ro.ophthacloud.shared.security.OphthaPrincipal;
@@ -57,6 +61,7 @@ class PrescriptionServiceTest {
     @Mock private PrescriptionNumberGenerator   numberGenerator;
     @Mock private ApplicationEventPublisher     eventPublisher;
     @Mock private JdbcTemplate                  jdbcTemplate;
+    @Mock private AuditLogService               auditLogService;
 
     @InjectMocks
     private PrescriptionService service;
@@ -73,6 +78,7 @@ class PrescriptionServiceTest {
                 STAFF_ID.toString(),
                 TENANT_ID.toString(),
                 STAFF_ID.toString(),
+                null,
                 "DOCTOR",
                 Map.of("prescriptions", new ModulePermissions(true, true, true, true, true, false))
         );

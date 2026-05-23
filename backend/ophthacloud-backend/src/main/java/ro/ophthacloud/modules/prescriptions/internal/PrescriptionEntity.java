@@ -11,6 +11,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ro.ophthacloud.infrastructure.persistence.TenantAwareEntity;
+import ro.ophthacloud.modules.prescriptions.enums.LensType;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionStatusType;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionType;
 
 import java.math.BigDecimal;
 import java.time.Instant;

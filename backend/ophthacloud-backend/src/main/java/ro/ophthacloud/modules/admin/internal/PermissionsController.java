@@ -12,6 +12,9 @@ import ro.ophthacloud.shared.api.ApiResponse;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * REST controller for RBAC permissions matrix.
  * Adheres to GUIDE_04 §10.2.
@@ -20,12 +23,14 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/permissions")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Admin / Permissions", description = "Endpoints for managing RBAC permissions matrix")
 public class PermissionsController {
 
     private final AdminFacade adminFacade;
 
     @GetMapping
     @PreAuthorize("hasPermission('admin', 'MODULE', 'VIEW')")
+    @Operation(summary = "Get permissions matrix for role")
     public ApiResponse<List<PermissionMatrixDto>> getPermissions(@RequestParam StaffRole role) {
         log.debug("REST request to get permissions for role: {}", role);
         List<PermissionMatrixDto> permissions = adminFacade.getPermissionsByRole(role);
@@ -34,6 +39,7 @@ public class PermissionsController {
 
     @PutMapping
     @PreAuthorize("hasPermission('admin', 'MODULE', 'EDIT')")
+    @Operation(summary = "Update permissions matrix for role")
     public ApiResponse<List<PermissionMatrixDto>> updatePermissions(
             @Valid @RequestBody UpdatePermissionsRequest request) {
         log.debug("REST request to update permissions for role: {}", request.role());

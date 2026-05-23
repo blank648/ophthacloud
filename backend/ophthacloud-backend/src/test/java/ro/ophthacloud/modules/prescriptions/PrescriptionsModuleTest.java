@@ -8,7 +8,7 @@ import org.springframework.modulith.test.Scenario;
 import org.springframework.test.context.ActiveProfiles;
 import ro.ophthacloud.OphthacloudBackendApplication;
 import ro.ophthacloud.modules.prescriptions.event.PrescriptionSignedEvent;
-import ro.ophthacloud.modules.prescriptions.internal.PrescriptionType;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionType;
 
 import java.time.Instant;
 import java.util.UUID;

@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ro.ophthacloud.modules.admin.dto.PermissionMatrixDto;
 import ro.ophthacloud.modules.admin.dto.UpdatePermissionsRequest;
+import ro.ophthacloud.shared.audit.AuditLogService;
+import ro.ophthacloud.shared.audit.AuditEntry;
 import ro.ophthacloud.shared.tenant.TenantContext;
 
 import java.util.HashMap;
@@ -32,6 +34,7 @@ public class PermissionsService {
     private final StaffMemberRepository staffMemberRepository;
     private final KeycloakAdminService keycloakAdminService;
     private final ObjectMapper objectMapper;
+    private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
     public List<PermissionMatrixDto> getPermissionsByRole(StaffRole role) {
@@ -86,6 +89,13 @@ public class PermissionsService {
                 // Continue with other users — partial failure is logged but doesn't abort
             }
         }
+
+        auditLogService.log(AuditEntry.builder()
+                .action("PERMISSION_CHANGE")
+                .entityType("TenantRoleModulePermission")
+                .entityId(null)
+                .changedField("role", null, role.name())
+                .build());
 
         log.info("Permission cascade completed for role {} in tenant {}. Affected users: {}", role, tenantId, affectedStaff.size());
         return saved.stream().map(PermissionMatrixDto::from).toList();

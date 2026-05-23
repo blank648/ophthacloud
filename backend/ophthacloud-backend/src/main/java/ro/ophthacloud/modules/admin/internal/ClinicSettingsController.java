@@ -10,6 +10,9 @@ import ro.ophthacloud.modules.admin.dto.ClinicSettingsDto;
 import ro.ophthacloud.modules.admin.dto.UpdateClinicSettingsRequest;
 import ro.ophthacloud.shared.api.ApiResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * REST controller for clinic settings.
  * Adheres to GUIDE_04 §10.3.
@@ -18,12 +21,14 @@ import ro.ophthacloud.shared.api.ApiResponse;
 @RequestMapping("/api/v1/admin/settings")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Admin / Clinic Settings", description = "Endpoints for managing clinic settings")
 public class ClinicSettingsController {
 
     private final AdminFacade adminFacade;
 
     @GetMapping
     @PreAuthorize("hasPermission('admin', 'MODULE', 'VIEW')")
+    @Operation(summary = "Get clinic settings")
     public ApiResponse<ClinicSettingsDto> getSettings() {
         log.debug("REST request to get clinic settings");
         ClinicSettingsDto settings = adminFacade.getClinicSettings();
@@ -32,6 +37,7 @@ public class ClinicSettingsController {
 
     @PutMapping
     @PreAuthorize("hasPermission('admin', 'MODULE', 'EDIT')")
+    @Operation(summary = "Update clinic settings")
     public ApiResponse<ClinicSettingsDto> updateSettings(
             @Valid @RequestBody UpdateClinicSettingsRequest request) {
         log.debug("REST request to update clinic settings");

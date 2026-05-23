@@ -75,6 +75,7 @@ class SecurityUtilsTest {
                 "kc-sub-uuid",
                 tenantId,
                 staffId,
+                null,
                 staffRole,
                 Map.of()
         );

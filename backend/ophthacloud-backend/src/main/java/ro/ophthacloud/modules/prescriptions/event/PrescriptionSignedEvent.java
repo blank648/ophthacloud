@@ -1,6 +1,6 @@
 package ro.ophthacloud.modules.prescriptions.event;
 
-import ro.ophthacloud.modules.prescriptions.internal.PrescriptionType;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionType;
 
 import java.time.Instant;
 import java.util.UUID;

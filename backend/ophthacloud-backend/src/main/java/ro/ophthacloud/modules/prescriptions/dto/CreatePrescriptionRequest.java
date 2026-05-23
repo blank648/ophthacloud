@@ -7,8 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ro.ophthacloud.modules.prescriptions.internal.LensType;
-import ro.ophthacloud.modules.prescriptions.internal.PrescriptionType;
+import ro.ophthacloud.modules.prescriptions.enums.LensType;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

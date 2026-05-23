@@ -23,15 +23,20 @@ import ro.ophthacloud.shared.security.SecurityUtils;
 import java.util.Map;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/v1/investigations")
 @RequiredArgsConstructor
+@Tag(name = "Investigations", description = "Endpoints for managing patient investigations and attachments")
 public class InvestigationController {
 
     private final InvestigationsFacade facade;
 
     @GetMapping
     @PreAuthorize("hasPermission('investigations', 'MODULE', 'VIEW') or hasPermission('investigations', 'MODULE', 'EDIT')")
+    @Operation(summary = "List investigations for a patient")
     public PagedApiResponse<InvestigationDto> listInvestigations(
             @RequestParam UUID patientId,
             @RequestParam(required = false) InvestigationCategoryType category,
@@ -49,6 +54,7 @@ public class InvestigationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasPermission('investigations', 'MODULE', 'CREATE')")
+    @Operation(summary = "Create new investigation order")
     public ApiResponse<InvestigationDto> createInvestigation(@Valid @RequestBody CreateInvestigationRequest request) {
         UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
         ro.ophthacloud.shared.security.OphthaPrincipal principal = SecurityUtils.currentPrincipal();
@@ -61,6 +67,7 @@ public class InvestigationController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasPermission('investigations', 'MODULE', 'VIEW') or hasPermission('investigations', 'MODULE', 'EDIT')")
+    @Operation(summary = "Get investigation by ID")
     public ApiResponse<InvestigationDto> getInvestigation(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
         InvestigationDto investigation = facade.getInvestigation(tenantId, id);
@@ -69,6 +76,7 @@ public class InvestigationController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasPermission('investigations', 'MODULE', 'EDIT')")
+    @Operation(summary = "Update investigation results/status")
     public ApiResponse<InvestigationDto> updateInvestigationResult(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateInvestigationResultRequest request) {
@@ -80,6 +88,7 @@ public class InvestigationController {
     @PostMapping(value = "/{id}/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasPermission('investigations', 'MODULE', 'EDIT')")
+    @Operation(summary = "Upload investigation attachment file")
     public ApiResponse<InvestigationFileDto> uploadFile(
             @PathVariable UUID id,
             @RequestParam("file") MultipartFile file,
@@ -93,6 +102,7 @@ public class InvestigationController {
 
     @GetMapping("/{id}/files/{fileId}/download-url")
     @PreAuthorize("hasPermission('investigations', 'MODULE', 'VIEW') or hasPermission('investigations', 'MODULE', 'EDIT')")
+    @Operation(summary = "Get temporary download URL for investigation file")
     public ApiResponse<Map<String, String>> getFileDownloadUrl(
             @PathVariable UUID id,
             @PathVariable UUID fileId) {

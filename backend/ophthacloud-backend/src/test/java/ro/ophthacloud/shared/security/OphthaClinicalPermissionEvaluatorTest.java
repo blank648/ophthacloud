@@ -101,6 +101,7 @@ class OphthaClinicalPermissionEvaluatorTest {
                 "kc-uuid",
                 "tenant-111",
                 "staff-222",
+                null,
                 staffRole,
                 permissions
         );

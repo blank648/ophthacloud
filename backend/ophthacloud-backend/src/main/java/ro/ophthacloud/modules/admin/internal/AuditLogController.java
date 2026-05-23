@@ -19,6 +19,9 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * Read-only REST controller for audit log viewing.
  * Adheres to GUIDE_04 §11: GET only, paginated, filterable.
@@ -34,12 +37,14 @@ import java.util.UUID;
 @RequestMapping("/api/v1/audit/log")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Admin / Audit Log", description = "Endpoints for viewing system audit logs")
 public class AuditLogController {
 
     private final AuditLogRepository auditLogRepository;
 
     @GetMapping
     @PreAuthorize("hasPermission('admin', 'MODULE', 'VIEW')")
+    @Operation(summary = "Get audit log entries")
     public PagedApiResponse<AuditLogDto> getAuditLog(
             @RequestParam(required = false) String entityType,
             @RequestParam(required = false) UUID entityId,

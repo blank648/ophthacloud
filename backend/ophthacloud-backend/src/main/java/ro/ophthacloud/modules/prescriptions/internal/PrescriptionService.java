@@ -14,8 +14,13 @@ import ro.ophthacloud.modules.prescriptions.dto.PrescriptionDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineRequest;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionVerifyDto;
+import ro.ophthacloud.modules.prescriptions.enums.LensType;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionStatusType;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionType;
 import ro.ophthacloud.modules.prescriptions.event.PrescriptionSignedEvent;
 import ro.ophthacloud.shared.api.PdfDownloadResponse;
+import ro.ophthacloud.shared.audit.AuditEntry;
+import ro.ophthacloud.shared.audit.AuditLogService;
 import ro.ophthacloud.shared.util.DocumentStorageService;
 import ro.ophthacloud.shared.util.PdfGenerationService;
 
@@ -42,6 +47,7 @@ public class PrescriptionService {
     private final JdbcTemplate jdbcTemplate;
     private final PdfGenerationService pdfGenerationService;
     private final DocumentStorageService documentStorageService;
+    private final AuditLogService auditLogService;
 
     // ── Create ──────────────────────────────────────────────────────────────
 
@@ -106,6 +112,13 @@ public class PrescriptionService {
         PrescriptionEntity entity = getEntityOrThrow(tenantId, id);
         List<PrescriptionLineEntity> lines = prescriptionLineRepository
                 .findByTenantIdAndPrescriptionId(tenantId, id);
+
+        auditLogService.log(AuditEntry.builder()
+                .action("VIEW")
+                .entityType("Prescription")
+                .entityId(id)
+                .build());
+
         return mapToDto(entity, lines);
     }
 
@@ -152,6 +165,12 @@ public class PrescriptionService {
         entity.setSignedAt(Instant.now());
         // Status stays ACTIVE — signing confirms the prescription
         PrescriptionEntity updated = prescriptionRepository.save(entity);
+
+        auditLogService.log(AuditEntry.builder()
+                .action("SIGN")
+                .entityType("Prescription")
+                .entityId(id)
+                .build());
 
         eventPublisher.publishEvent(new PrescriptionSignedEvent(
                 updated.getId(),

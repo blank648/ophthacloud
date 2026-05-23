@@ -79,6 +79,7 @@ class PatientManagementFacadeTest {
                 UUID.randomUUID().toString(),
                 TENANT_ID.toString(),
                 UUID.randomUUID().toString(),
+                null,
                 "DOCTOR",
                 Map.of("patients", new ModulePermissions(true, true, true, true, false, false))
         );

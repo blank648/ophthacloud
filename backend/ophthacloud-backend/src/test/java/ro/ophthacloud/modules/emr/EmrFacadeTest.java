@@ -74,6 +74,7 @@ class EmrFacadeTest {
                 STAFF_ID.toString(),
                 TENANT_ID.toString(),
                 STAFF_ID.toString(),
+                null,
                 "DOCTOR",
                 Map.of("emr", new ModulePermissions(true, true, true, true, true, false))
         );

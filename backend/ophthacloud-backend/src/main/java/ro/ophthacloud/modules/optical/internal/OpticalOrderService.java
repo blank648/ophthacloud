@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import ro.ophthacloud.modules.optical.dto.*;
 import ro.ophthacloud.modules.optical.event.*;
+import ro.ophthacloud.shared.audit.AuditLogService;
+import ro.ophthacloud.shared.audit.AuditEntry;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -26,6 +28,7 @@ public class OpticalOrderService {
     private final StockService stockService;
     private final ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
+    private final AuditLogService auditLogService;
 
     @Transactional
     public OpticalOrderDto createOrder(UUID tenantId, CreateOrderRequest request, UUID createdById) {
@@ -98,6 +101,13 @@ public class OpticalOrderService {
         eventPublisher.publishEvent(new OpticalOrderStatusChangedEvent(
                 order.getId(), order.getOrderNumber(), tenantId, order.getPatientId(), oldStage, newStage, Instant.now()
         ));
+
+        auditLogService.log(AuditEntry.builder()
+                .action("STAGE_CHANGE")
+                .entityType("OpticalOrder")
+                .entityId(order.getId())
+                .changedField("stage", oldStage, newStage)
+                .build());
 
         return toDto(order);
     }

@@ -198,6 +198,7 @@ class AuditLogServiceIntegrationTest extends BaseIntegrationTest {
                 keycloakUserId,
                 tenantId.toString(),
                 staffId,
+                null,
                 staffRole,
                 Map.of()
         );

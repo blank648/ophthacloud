@@ -22,6 +22,9 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * REST Endpoint for Patients module.
  * Adheres to GUIDE_04 §2.
@@ -30,12 +33,14 @@ import java.util.UUID;
 @RequestMapping("/api/v1/patients")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Patients", description = "Endpoints for managing patient records and demographics")
 public class PatientController {
 
     private final PatientManagementFacade patientManagementFacade;
 
     @GetMapping
     @PreAuthorize("hasPermission('patients', 'MODULE', 'VIEW')")
+    @Operation(summary = "List and search patients")
     public PagedApiResponse<PatientSummaryDto> listPatients(
             @RequestParam(required = false) String q,
             @PageableDefault(size = 20, sort = "lastName", direction = Sort.Direction.ASC) Pageable pageable) {
@@ -47,6 +52,7 @@ public class PatientController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasPermission('patients', 'MODULE', 'CREATE')")
+    @Operation(summary = "Create a new patient")
     public ApiResponse<PatientDto> createPatient(@Valid @RequestBody CreatePatientRequest request) {
         log.debug("REST request to create patient: {} {}", request.getFirstName(), request.getLastName());
         PatientDto patient = patientManagementFacade.createPatient(request);
@@ -55,6 +61,7 @@ public class PatientController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasPermission('patients', 'MODULE', 'VIEW')")
+    @Operation(summary = "Get patient details by ID")
     public ApiResponse<PatientDto> getPatient(@PathVariable UUID id) {
         log.debug("REST request to get patient: {}", id);
         PatientDto patient = patientManagementFacade.getPatient(id);
@@ -63,6 +70,7 @@ public class PatientController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasPermission('patients', 'MODULE', 'EDIT')")
+    @Operation(summary = "Update patient details")
     public ApiResponse<PatientDto> updatePatient(
             @PathVariable UUID id,
             @Valid @RequestBody UpdatePatientRequest request) {
@@ -74,6 +82,7 @@ public class PatientController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasPermission('patients', 'MODULE', 'DELETE')")
+    @Operation(summary = "Soft delete / anonymize a patient")
     public void deletePatient(@PathVariable UUID id) {
         log.debug("REST request to delete patient: {}", id);
         patientManagementFacade.deletePatient(id);
@@ -81,6 +90,7 @@ public class PatientController {
 
     @PostMapping("/{id}/portal-invite")
     @PreAuthorize("hasPermission('patients', 'MODULE', 'EDIT')")
+    @Operation(summary = "Send a patient portal invitation")
     public ApiResponse<Map<String, Instant>> inviteToPortal(@PathVariable UUID id) {
         log.debug("REST request to invite patient to portal: {}", id);
         Instant invitedAt = patientManagementFacade.inviteToPortal(id);

@@ -85,6 +85,8 @@ public class SecurityConfig {
                                  "/v3/api-docs/**", "/api-docs/**").permitAll()
                 // Public API placeholder (future use)
                 .requestMatchers("/api/v1/public/**").permitAll()
+                // Portal — patient role only (GUIDE_06 §10)
+                .requestMatchers("/api/v1/portal/**").hasRole("PATIENT")
                 // FHIR — authenticated but no module permission check
                 .requestMatchers("/fhir/r4/**").authenticated()
                 // ALL other requests: must be authenticated, then @PreAuthorize drives authorization

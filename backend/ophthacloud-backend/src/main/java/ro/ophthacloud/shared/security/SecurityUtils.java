@@ -58,6 +58,35 @@ public final class SecurityUtils {
     }
 
     /**
+     * Returns the current patient's ID (UUID string form) from the {@link SecurityContextHolder}.
+     * <p>
+     * Only valid when the authenticated user is a portal patient (PATIENT role with patient_id claim).
+     *
+     * @throws IllegalStateException if there is no authenticated {@link OphthaPrincipal} in context
+     *         or the current principal is not a patient
+     */
+    public static String currentPatientId() {
+        OphthaPrincipal principal = requirePrincipal();
+        if (principal.patientId() == null) {
+            throw new IllegalStateException(
+                    "Current principal is not a patient (no patient_id claim). " +
+                    "This method must only be called within a patient portal request context.");
+        }
+        return principal.patientId();
+    }
+
+    /**
+     * Returns {@code true} if the current authenticated user is a portal patient.
+     */
+    public static boolean isPatient() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof OphthaPrincipal principal) {
+            return principal.isPatient();
+        }
+        return false;
+    }
+
+    /**
      * Returns {@code true} if the current request has an authenticated {@link OphthaPrincipal}.
      * Safe to call even in unauthenticated contexts (returns false instead of throwing).
      */

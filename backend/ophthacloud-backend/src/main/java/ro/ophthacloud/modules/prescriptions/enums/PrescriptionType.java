@@ -1,4 +1,4 @@
-package ro.ophthacloud.modules.prescriptions.internal;
+package ro.ophthacloud.modules.prescriptions.enums;
 
 public enum PrescriptionType {
     DISTANCE,

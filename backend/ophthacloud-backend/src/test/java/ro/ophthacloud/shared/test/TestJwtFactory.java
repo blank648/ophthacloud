@@ -68,6 +68,33 @@ public final class TestJwtFactory {
                 .compact();
     }
 
+    /**
+     * Creates a signed HS256 JWT for a portal patient.
+     * <p>
+     * The token has {@code staff_role = PATIENT} and a {@code patient_id} claim
+     * instead of {@code staff_id}. The permissions map grants VIEW-only access
+     * to the {@code portal} module only.
+     *
+     * @param patientId the patient UUID string embedded as {@code patient_id} claim
+     * @param tenantId  the tenant UUID embedded as {@code tenant_id} claim
+     * @return a compact JWT string suitable for use as a Bearer token in portal test requests
+     */
+    public static String createPatientToken(String patientId, UUID tenantId) {
+        Instant now = Instant.now();
+        Instant exp = now.plusSeconds(3600);
+
+        return Jwts.builder()
+                .subject(patientId)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(exp))
+                .claim("tenant_id", tenantId.toString())
+                .claim("patient_id", patientId)
+                .claim("staff_role", "PATIENT")
+                .claim("permissions", buildPatientPermissions())
+                .signWith(signingKey(), Jwts.SIG.HS256)
+                .compact();
+    }
+
     // ── Private helpers ──────────────────────────────────────────────────────
 
     /**
@@ -90,6 +117,23 @@ public final class TestJwtFactory {
             modulePerms.put("export", fullAccess && ("reports".equals(module) || "audit".equals(module)));
             permissions.put(module, modulePerms);
         }
+        return permissions;
+    }
+
+    /**
+     * Builds the permissions claim for a portal patient.
+     * Only the {@code portal} module has VIEW permission; all other modules are deny-all.
+     */
+    private static Map<String, Object> buildPatientPermissions() {
+        Map<String, Object> permissions = new HashMap<>();
+        Map<String, Boolean> portalPerms = new HashMap<>();
+        portalPerms.put("view",   true);
+        portalPerms.put("create", false);
+        portalPerms.put("edit",   false);
+        portalPerms.put("delete", false);
+        portalPerms.put("sign",   false);
+        portalPerms.put("export", false);
+        permissions.put("portal", portalPerms);
         return permissions;
     }
 

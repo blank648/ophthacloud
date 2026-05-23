@@ -20,6 +20,7 @@ import ro.ophthacloud.modules.optical.dto.QcResultDto;
 import ro.ophthacloud.modules.optical.dto.UpdateStageRequest;
 import ro.ophthacloud.modules.optical.event.OpticalOrderCreatedEvent;
 import ro.ophthacloud.modules.optical.internal.*;
+import ro.ophthacloud.shared.audit.AuditLogService;
 import ro.ophthacloud.shared.security.ModulePermissions;
 import ro.ophthacloud.shared.security.OphthaClinicalAuthenticationToken;
 import ro.ophthacloud.shared.security.OphthaPrincipal;
@@ -55,6 +56,7 @@ class OpticalFacadeTest {
     @Mock private OrderTotalCalculator         totalCalculator;
     @Mock private StockService                 stockService;
     @Mock private ApplicationEventPublisher    eventPublisher;
+    @Mock private AuditLogService              auditLogService;
 
     private final ObjectMapper objectMapper = tools.jackson.databind.json.JsonMapper.builder().build();
 
@@ -77,6 +79,7 @@ class OpticalFacadeTest {
                 STAFF_ID.toString(),
                 TENANT_ID.toString(),
                 STAFF_ID.toString(),
+                null,
                 "DOCTOR",
                 Map.of("optical", new ModulePermissions(true, true, true, true, false, false))
         );
@@ -86,7 +89,8 @@ class OpticalFacadeTest {
         // Construct service manually — ObjectMapper can't be @InjectMocks'd alongside @Mock
         orderService = new OpticalOrderService(
                 orderRepository, itemRepository, numberGenerator,
-                totalCalculator, stockService, eventPublisher, objectMapper
+                totalCalculator, stockService, eventPublisher, objectMapper,
+                auditLogService
         );
         facade = new OpticalFacade(orderService);
 
@@ -147,6 +151,7 @@ class OpticalFacadeTest {
 
         assertThat(result.stage()).isEqualTo(OrderStage.SENT_TO_LAB);
         assertThat(order.getSentToLabAt()).isNotNull();
+        verify(auditLogService).log(any());
     }
 
     // ── Test 4: Stage SENT_TO_LAB → QC_CHECK (valid) ─────────────────────────

@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionStatusType;
+import ro.ophthacloud.modules.prescriptions.enums.PrescriptionType;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,12 +38,12 @@ public interface PrescriptionRepository extends JpaRepository<PrescriptionEntity
     @Modifying
     @Query("""
             UPDATE PrescriptionEntity p
-            SET p.status = ro.ophthacloud.modules.prescriptions.internal.PrescriptionStatusType.SUPERSEDED,
+            SET p.status = ro.ophthacloud.modules.prescriptions.enums.PrescriptionStatusType.SUPERSEDED,
                 p.supersededById = :newId
             WHERE p.patientId = :patientId
               AND p.tenantId = :tenantId
               AND p.prescriptionType = :type
-              AND p.status = ro.ophthacloud.modules.prescriptions.internal.PrescriptionStatusType.ACTIVE
+              AND p.status = ro.ophthacloud.modules.prescriptions.enums.PrescriptionStatusType.ACTIVE
               AND p.id != :newId
             """)
     int supersedePreviousActive(

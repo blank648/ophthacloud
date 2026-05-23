@@ -84,6 +84,7 @@ class AppointmentManagementFacadeTest {
                 UUID.randomUUID().toString(),
                 TENANT_ID.toString(),
                 UUID.randomUUID().toString(),
+                null,
                 "DOCTOR",
                 Map.of("appointments", new ModulePermissions(true, true, true, true, false, false))
         );

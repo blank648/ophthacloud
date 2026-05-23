@@ -19,6 +19,9 @@ import ro.ophthacloud.shared.api.PagedApiResponse;
 
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * REST controller for staff management.
  * Adheres to GUIDE_04 §10.1.
@@ -27,12 +30,14 @@ import java.util.UUID;
 @RequestMapping("/api/v1/admin/staff")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Admin / Staff", description = "Endpoints for managing clinic staff members")
 public class AdminController {
 
     private final AdminFacade adminFacade;
 
     @GetMapping
     @PreAuthorize("hasPermission('admin', 'MODULE', 'VIEW')")
+    @Operation(summary = "List staff members")
     public PagedApiResponse<StaffMemberDto> listStaff(
             @RequestParam(required = false) StaffRole role,
             @PageableDefault(size = 20, sort = "lastName", direction = Sort.Direction.ASC) Pageable pageable) {
@@ -44,6 +49,7 @@ public class AdminController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasPermission('admin', 'MODULE', 'CREATE')")
+    @Operation(summary = "Create staff member")
     public ApiResponse<StaffMemberDto> createStaff(@Valid @RequestBody CreateStaffMemberRequest request) {
         log.debug("REST request to create staff: {} {}", request.firstName(), request.lastName());
         StaffMemberDto staff = adminFacade.createStaffMember(request);
@@ -52,6 +58,7 @@ public class AdminController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasPermission('admin', 'MODULE', 'EDIT')")
+    @Operation(summary = "Update staff member")
     public ApiResponse<StaffMemberDto> updateStaff(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateStaffMemberRequest request) {
@@ -63,6 +70,7 @@ public class AdminController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasPermission('admin', 'MODULE', 'DELETE')")
+    @Operation(summary = "Deactivate staff member")
     public void deleteStaff(@PathVariable UUID id) {
         log.debug("REST request to deactivate staff: {}", id);
         adminFacade.deactivateStaffMember(id);

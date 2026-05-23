@@ -72,6 +72,7 @@ class AdminFacadeTest {
 
     @Mock private TenantRoleModulePermissionRepository permissionRepository;
     @Mock private tools.jackson.databind.ObjectMapper objectMapper;
+    @Mock private ro.ophthacloud.shared.audit.AuditLogService auditLogService;
 
     private PermissionsService permissionsService;
 
@@ -92,7 +93,7 @@ class AdminFacadeTest {
     @BeforeEach
     void setUp() {
         adminService = new AdminService(staffMemberRepository, keycloakAdminService);
-        permissionsService = new PermissionsService(permissionRepository, staffMemberRepository, keycloakAdminService, objectMapper);
+        permissionsService = new PermissionsService(permissionRepository, staffMemberRepository, keycloakAdminService, objectMapper, auditLogService);
         clinicSettingsService = new ClinicSettingsService(clinicSettingsRepository);
         facade = new AdminFacade(adminService, permissionsService, clinicSettingsService, staffMemberRepository);
 
@@ -102,6 +103,7 @@ class AdminFacadeTest {
                 KEYCLOAK_USER_ID,
                 TENANT_ID.toString(),
                 STAFF_ID.toString(),
+                null,
                 "CLINIC_ADMIN",
                 Map.of("admin", new ModulePermissions(true, true, true, true, false, false))
         );
@@ -271,6 +273,9 @@ class AdminFacadeTest {
 
         // Step 4: Active sessions invalidated
         verify(keycloakAdminService).invalidateSessions(eq(KEYCLOAK_USER_ID));
+
+        // Audit log verified
+        verify(auditLogService).log(any());
     }
 
     // ── Test 6: updateClinicSettings — invalid bookingSlotMinutes rejected ───
