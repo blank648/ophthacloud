@@ -42,12 +42,24 @@ public class LoginEventListener {
                             staff.setLastLoginAt(now);
                             staffMemberRepository.save(staff);
 
-                            auditLogService.log(AuditEntry.builder()
-                                    .action("LOGIN")
-                                    .entityType("StaffMember")
-                                    .entityId(staffId)
-                                    .changedField("email", null, staff.getEmail())
-                                    .build());
+                            org.springframework.security.core.Authentication previousAuth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+                            try {
+                                ro.ophthacloud.shared.tenant.TenantContext.set(UUID.fromString(principal.tenantId()));
+                                org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(token);
+                                auditLogService.log(AuditEntry.builder()
+                                        .action("LOGIN")
+                                        .entityType("StaffMember")
+                                        .entityId(staffId)
+                                        .changedField("email", null, staff.getEmail())
+                                        .build());
+                            } finally {
+                                ro.ophthacloud.shared.tenant.TenantContext.clear();
+                                if (previousAuth == null) {
+                                    org.springframework.security.core.context.SecurityContextHolder.clearContext();
+                                } else {
+                                    org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(previousAuth);
+                                }
+                            }
 
                             log.info("Successfully audited LOGIN and updated lastLoginAt for staff member {}", staffId);
                         }

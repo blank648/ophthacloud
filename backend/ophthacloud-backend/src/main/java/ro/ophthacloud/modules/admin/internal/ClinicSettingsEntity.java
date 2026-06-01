@@ -13,6 +13,7 @@ import org.hibernate.type.SqlTypes;
 import ro.ophthacloud.infrastructure.persistence.TenantAwareEntity;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "clinic_settings")
@@ -90,4 +91,16 @@ public class ClinicSettingsEntity extends TenantAwareEntity {
     @Builder.Default
     @Column(name = "vat_rate_default", precision = 5, scale = 2)
     private BigDecimal vatRateDefault = new BigDecimal("19.00");
+
+    @Builder.Default
+    @Column(name = "quiet_hours_start")
+    private LocalTime quietHoursStart = LocalTime.of(20, 0);
+
+    @Builder.Default
+    @Column(name = "quiet_hours_end")
+    private LocalTime quietHoursEnd = LocalTime.of(8, 0);
+
+    @Builder.Default
+    @Column(name = "max_sms_per_patient")
+    private Integer maxSmsPerPatient = 2;
 }

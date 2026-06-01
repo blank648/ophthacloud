@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ro.ophthacloud.modules.prescriptions.enums.LensType;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 @Data
 @Builder
+@Jacksonized
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreatePrescriptionRequest {

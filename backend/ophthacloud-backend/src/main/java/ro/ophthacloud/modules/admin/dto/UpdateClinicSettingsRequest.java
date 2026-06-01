@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 /**
  * PUT request body for updating clinic settings.
@@ -23,6 +24,14 @@ public record UpdateClinicSettingsRequest(
         @Size(max = 5) @Pattern(regexp = "^[A-Za-z0-9]*$", message = "Prefix must be alphanumeric, max 5 chars")
         String orderNumberPrefix,
         @Size(max = 5) @Pattern(regexp = "^[A-Za-z0-9]*$", message = "Prefix must be alphanumeric, max 5 chars")
-        String prescriptionPrefix
+        String prescriptionPrefix,
+        LocalTime quietHoursStart,
+        LocalTime quietHoursEnd,
+        @Min(0) Integer maxSmsPerPatient,
+        String name,
+        String cui,
+        String phone,
+        String email,
+        String address
 ) {
 }

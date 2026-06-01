@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ro.ophthacloud.modules.prescriptions.PrescriptionsFacade;
@@ -31,6 +32,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class PrescriptionController {
 
     private final PrescriptionsFacade facade;
+    private final JdbcTemplate jdbcTemplate;
 
     // ── Authenticated endpoints ───────────────────────────────────────────────
 
@@ -57,7 +59,20 @@ public class PrescriptionController {
         UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
         ro.ophthacloud.shared.security.OphthaPrincipal principal = SecurityUtils.currentPrincipal();
         UUID issuedById = UUID.fromString(principal.staffId() != null ? principal.staffId() : principal.keycloakUserId());
+        
         String issuedByName = "Dr. " + principal.staffRole();
+        try {
+            String realName = jdbcTemplate.queryForObject(
+                "SELECT first_name || ' ' || last_name FROM staff_members WHERE tenant_id = ? AND (id = ? OR keycloak_user_id = ?)",
+                String.class,
+                tenantId,
+                issuedById,
+                principal.keycloakUserId() != null ? UUID.fromString(principal.keycloakUserId()) : issuedById
+            );
+            if (realName != null && !realName.isBlank()) {
+                issuedByName = "Dr. " + realName;
+            }
+        } catch (Exception ignored) {}
 
         PrescriptionDto created = facade.createPrescription(tenantId, issuedById, issuedByName, request);
         return ApiResponse.of(created);

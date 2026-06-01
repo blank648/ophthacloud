@@ -38,6 +38,8 @@ public class SectionDataValidator {
                     }
                 }
             }
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid JSON format for section data", e);
         }
@@ -64,8 +66,8 @@ public class SectionDataValidator {
         }
 
         Double add = getDoubleOrNull(eyeNode.path("add"));
-        if (add != null && (add < 0.50 || add > 4.00)) {
-            throw new IllegalArgumentException("Add must be between 0.50 and 4.00");
+        if (add != null && (add < 0.25 || add > 4.00)) {
+            throw new IllegalArgumentException("Add must be between 0.25 and 4.00");
         }
     }
 

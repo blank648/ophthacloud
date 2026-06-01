@@ -14,9 +14,7 @@ import ro.ophthacloud.modules.prescriptions.dto.PrescriptionDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineRequest;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionVerifyDto;
-import ro.ophthacloud.modules.prescriptions.enums.LensType;
 import ro.ophthacloud.modules.prescriptions.enums.PrescriptionStatusType;
-import ro.ophthacloud.modules.prescriptions.enums.PrescriptionType;
 import ro.ophthacloud.modules.prescriptions.event.PrescriptionSignedEvent;
 import ro.ophthacloud.shared.api.PdfDownloadResponse;
 import ro.ophthacloud.shared.audit.AuditEntry;
@@ -36,393 +34,394 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PrescriptionService {
 
-    private static final String QR_BASE_URL = "https://app.ophthacloud.ro/verify/";
+        private static final String QR_BASE_URL = "https://app.ophthacloud.ro/verify/";
 
-    private static final String MINIO_BUCKET = "generated-documents";
+        private static final String MINIO_BUCKET = "generated-documents";
 
-    private final PrescriptionRepository prescriptionRepository;
-    private final PrescriptionLineRepository prescriptionLineRepository;
-    private final PrescriptionNumberGenerator numberGenerator;
-    private final ApplicationEventPublisher eventPublisher;
-    private final JdbcTemplate jdbcTemplate;
-    private final PdfGenerationService pdfGenerationService;
-    private final DocumentStorageService documentStorageService;
-    private final AuditLogService auditLogService;
+        private final PrescriptionRepository prescriptionRepository;
+        private final PrescriptionLineRepository prescriptionLineRepository;
+        private final PrescriptionNumberGenerator numberGenerator;
+        private final ApplicationEventPublisher eventPublisher;
+        private final JdbcTemplate jdbcTemplate;
+        private final PdfGenerationService pdfGenerationService;
+        private final DocumentStorageService documentStorageService;
+        private final AuditLogService auditLogService;
 
-    // ── Create ──────────────────────────────────────────────────────────────
+        // ── Create ──────────────────────────────────────────────────────────────
 
-    @Transactional
-    public PrescriptionDto createPrescription(UUID tenantId, UUID issuedById, String issuedByName,
-                                              CreatePrescriptionRequest request) {
-        // Fetch patient MRN via JDBC to avoid cross-module entity dependency
-        String mrn = jdbcTemplate.queryForObject(
-                "SELECT mrn FROM patients WHERE id = ? AND tenant_id = ?",
-                String.class, request.getPatientId(), tenantId);
+        @Transactional
+        public PrescriptionDto createPrescription(UUID tenantId, UUID issuedById, String issuedByName,
+                        CreatePrescriptionRequest request) {
+                // Fetch patient MRN via JDBC to avoid cross-module entity dependency
+                String mrn = jdbcTemplate.queryForObject(
+                                "SELECT mrn FROM patients WHERE id = ? AND tenant_id = ?",
+                                String.class, request.getPatientId(), tenantId);
 
-        if (mrn == null) {
-            throw new IllegalArgumentException("Patient not found: " + request.getPatientId());
+                if (mrn == null) {
+                        throw new IllegalArgumentException("Patient not found: " + request.getPatientId());
+                }
+
+                String prescriptionNumber = numberGenerator.generate(mrn, tenantId, prescriptionRepository);
+
+                // QR code token: UUID.randomUUID() only — no timestamp component per user spec
+                UUID qrToken = UUID.randomUUID();
+
+                PrescriptionEntity entity = PrescriptionEntity.builder()
+                                .patientId(request.getPatientId())
+                                .consultationId(request.getConsultationId())
+                                .prescriptionNumber(prescriptionNumber)
+                                .prescriptionType(request.getPrescriptionType())
+                                .status(PrescriptionStatusType.ACTIVE)
+                                .issuedById(issuedById)
+                                .issuedByName(issuedByName)
+                                .issuedAt(Instant.now())
+                                .validFrom(request.getValidFrom())
+                                .validUntil(request.getValidUntil())
+                                .pdBinocular(request.getPdBinocular())
+                                .pdOd(request.getPdOd())
+                                .pdOs(request.getPdOs())
+                                .prismOd(request.getPrismOd())
+                                .prismOs(request.getPrismOs())
+                                .lensType(request.getLensType())
+                                .lensMaterial(request.getLensMaterial())
+                                .lensCoating(request.getLensCoating())
+                                .frameRecommendation(request.getFrameRecommendation())
+                                .clinicalNotes(request.getClinicalNotes())
+                                .patientInstructions(request.getPatientInstructions())
+                                .qrCodeToken(qrToken)
+                                .build();
+
+                PrescriptionEntity saved = prescriptionRepository.save(entity);
+
+                // Save prescription lines with auto-computed SEQ
+                List<PrescriptionLineEntity> lines = request.getLines().stream()
+                                .map(lineReq -> buildLine(lineReq, saved.getId()))
+                                .collect(Collectors.toList());
+                prescriptionLineRepository.saveAll(lines);
+
+                log.info("createPrescription: id={}, number={}, patient={}", saved.getId(), prescriptionNumber,
+                                request.getPatientId());
+                return mapToDto(saved, lines);
         }
 
-        String prescriptionNumber = numberGenerator.generate(mrn, tenantId, prescriptionRepository);
+        // ── Read ────────────────────────────────────────────────────────────────
 
-        // QR code token: UUID.randomUUID() only — no timestamp component per user spec
-        UUID qrToken = UUID.randomUUID();
+        @Transactional(readOnly = true)
+        public PrescriptionDto getPrescription(UUID tenantId, UUID id) {
+                PrescriptionEntity entity = getEntityOrThrow(tenantId, id);
+                List<PrescriptionLineEntity> lines = prescriptionLineRepository
+                                .findByTenantIdAndPrescriptionId(tenantId, id);
 
-        PrescriptionEntity entity = PrescriptionEntity.builder()
-                .patientId(request.getPatientId())
-                .consultationId(request.getConsultationId())
-                .prescriptionNumber(prescriptionNumber)
-                .prescriptionType(request.getPrescriptionType())
-                .status(PrescriptionStatusType.ACTIVE)
-                .issuedById(issuedById)
-                .issuedByName(issuedByName)
-                .issuedAt(Instant.now())
-                .validFrom(request.getValidFrom())
-                .validUntil(request.getValidUntil())
-                .pdBinocular(request.getPdBinocular())
-                .pdOd(request.getPdOd())
-                .pdOs(request.getPdOs())
-                .prismOd(request.getPrismOd())
-                .prismOs(request.getPrismOs())
-                .lensType(request.getLensType())
-                .lensMaterial(request.getLensMaterial())
-                .lensCoating(request.getLensCoating())
-                .frameRecommendation(request.getFrameRecommendation())
-                .clinicalNotes(request.getClinicalNotes())
-                .patientInstructions(request.getPatientInstructions())
-                .qrCodeToken(qrToken)
-                .build();
+                auditLogService.log(AuditEntry.builder()
+                                .action("VIEW")
+                                .entityType("Prescription")
+                                .entityId(id)
+                                .build());
 
-        PrescriptionEntity saved = prescriptionRepository.save(entity);
-
-        // Save prescription lines with auto-computed SEQ
-        List<PrescriptionLineEntity> lines = request.getLines().stream()
-                .map(lineReq -> buildLine(lineReq, saved.getId()))
-                .collect(Collectors.toList());
-        prescriptionLineRepository.saveAll(lines);
-
-        log.info("createPrescription: id={}, number={}, patient={}", saved.getId(), prescriptionNumber, request.getPatientId());
-        return mapToDto(saved, lines);
-    }
-
-    // ── Read ────────────────────────────────────────────────────────────────
-
-    @Transactional(readOnly = true)
-    public PrescriptionDto getPrescription(UUID tenantId, UUID id) {
-        PrescriptionEntity entity = getEntityOrThrow(tenantId, id);
-        List<PrescriptionLineEntity> lines = prescriptionLineRepository
-                .findByTenantIdAndPrescriptionId(tenantId, id);
-
-        auditLogService.log(AuditEntry.builder()
-                .action("VIEW")
-                .entityType("Prescription")
-                .entityId(id)
-                .build());
-
-        return mapToDto(entity, lines);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<PrescriptionDto> listPrescriptions(UUID tenantId, UUID patientId,
-                                                    PrescriptionStatusType status, Pageable pageable) {
-        Page<PrescriptionEntity> page;
-        if (status != null) {
-            page = prescriptionRepository.findByTenantIdAndPatientIdAndStatus(tenantId, patientId, status, pageable);
-        } else {
-            page = prescriptionRepository.findByTenantIdAndPatientId(tenantId, patientId, pageable);
-        }
-        return page.map(entity -> {
-            List<PrescriptionLineEntity> lines = prescriptionLineRepository
-                    .findByTenantIdAndPrescriptionId(tenantId, entity.getId());
-            return mapToDto(entity, lines);
-        });
-    }
-
-    // ── Sign ────────────────────────────────────────────────────────────────
-
-    /**
-     * Doctor confirms/signs the prescription.
-     * Supersedes any other ACTIVE prescription of the same type for this patient.
-     * Publishes PrescriptionSignedEvent.
-     * Per GUIDE_06 §5.3 and GUIDE_04 §6.4.
-     */
-    @Transactional
-    public PrescriptionDto signPrescription(UUID tenantId, UUID id) {
-        PrescriptionEntity entity = getEntityOrThrow(tenantId, id);
-
-        if (entity.getStatus() == PrescriptionStatusType.CANCELLED) {
-            throw new PrescriptionAlreadyCancelledException();
+                return mapToDto(entity, lines);
         }
 
-        // Supersede previous active prescriptions of same type
-        int superseded = prescriptionRepository.supersedePreviousActive(
-                entity.getPatientId(), tenantId, entity.getPrescriptionType(), id);
-        if (superseded > 0) {
-            log.info("signPrescription: superseded {} previous {} prescriptions for patient={}",
-                    superseded, entity.getPrescriptionType(), entity.getPatientId());
+        @Transactional(readOnly = true)
+        public Page<PrescriptionDto> listPrescriptions(UUID tenantId, UUID patientId,
+                        PrescriptionStatusType status, Pageable pageable) {
+                Page<PrescriptionEntity> page;
+                if (status != null) {
+                        page = prescriptionRepository.findByTenantIdAndPatientIdAndStatus(tenantId, patientId, status,
+                                        pageable);
+                } else {
+                        page = prescriptionRepository.findByTenantIdAndPatientId(tenantId, patientId, pageable);
+                }
+                return page.map(entity -> {
+                        List<PrescriptionLineEntity> lines = prescriptionLineRepository
+                                        .findByTenantIdAndPrescriptionId(tenantId, entity.getId());
+                        return mapToDto(entity, lines);
+                });
         }
 
-        entity.setSignedAt(Instant.now());
-        // Status stays ACTIVE — signing confirms the prescription
-        PrescriptionEntity updated = prescriptionRepository.save(entity);
+        // ── Sign ────────────────────────────────────────────────────────────────
 
-        auditLogService.log(AuditEntry.builder()
-                .action("SIGN")
-                .entityType("Prescription")
-                .entityId(id)
-                .build());
+        /**
+         * Doctor confirms/signs the prescription.
+         * Supersedes any other ACTIVE prescription of the same type for this patient.
+         * Publishes PrescriptionSignedEvent.
+         * Per GUIDE_06 §5.3 and GUIDE_04 §6.4.
+         */
+        @Transactional
+        public PrescriptionDto signPrescription(UUID tenantId, UUID id) {
+                PrescriptionEntity entity = getEntityOrThrow(tenantId, id);
 
-        eventPublisher.publishEvent(new PrescriptionSignedEvent(
-                updated.getId(),
-                updated.getPatientId(),
-                updated.getTenantId(),
-                updated.getPrescriptionType(),
-                updated.getPrescriptionNumber(),
-                updated.getSignedAt()
-        ));
+                if (entity.getStatus() == PrescriptionStatusType.CANCELLED) {
+                        throw new PrescriptionAlreadyCancelledException();
+                }
 
-        List<PrescriptionLineEntity> lines = prescriptionLineRepository
-                .findByTenantIdAndPrescriptionId(tenantId, id);
-        return mapToDto(updated, lines);
-    }
+                // Supersede previous active prescriptions of same type
+                int superseded = prescriptionRepository.supersedePreviousActive(
+                                entity.getPatientId(), tenantId, entity.getPrescriptionType(), id);
+                if (superseded > 0) {
+                        log.info("signPrescription: superseded {} previous {} prescriptions for patient={}",
+                                        superseded, entity.getPrescriptionType(), entity.getPatientId());
+                }
 
-    // ── Cancel ──────────────────────────────────────────────────────────────
+                entity.setSignedAt(Instant.now());
+                // Status stays ACTIVE — signing confirms the prescription
+                PrescriptionEntity updated = prescriptionRepository.save(entity);
 
-    @Transactional
-    public PrescriptionDto cancelPrescription(UUID tenantId, UUID id) {
-        PrescriptionEntity entity = getEntityOrThrow(tenantId, id);
+                auditLogService.log(AuditEntry.builder()
+                                .action("SIGN")
+                                .entityType("Prescription")
+                                .entityId(id)
+                                .build());
 
-        if (entity.getStatus() == PrescriptionStatusType.CANCELLED
-                || entity.getStatus() == PrescriptionStatusType.EXPIRED) {
-            throw new PrescriptionAlreadyCancelledException();
+                eventPublisher.publishEvent(new PrescriptionSignedEvent(
+                                updated.getId(),
+                                updated.getPatientId(),
+                                updated.getTenantId(),
+                                updated.getPrescriptionType(),
+                                updated.getPrescriptionNumber(),
+                                updated.getSignedAt()));
+
+                List<PrescriptionLineEntity> lines = prescriptionLineRepository
+                                .findByTenantIdAndPrescriptionId(tenantId, id);
+                return mapToDto(updated, lines);
         }
 
-        entity.setStatus(PrescriptionStatusType.CANCELLED);
-        PrescriptionEntity updated = prescriptionRepository.save(entity);
+        // ── Cancel ──────────────────────────────────────────────────────────────
 
-        List<PrescriptionLineEntity> lines = prescriptionLineRepository
-                .findByTenantIdAndPrescriptionId(tenantId, id);
-        return mapToDto(updated, lines);
-    }
+        @Transactional
+        public PrescriptionDto cancelPrescription(UUID tenantId, UUID id) {
+                PrescriptionEntity entity = getEntityOrThrow(tenantId, id);
 
-    // ── Public QR Verify (no tenant context needed) ─────────────────────────
+                if (entity.getStatus() == PrescriptionStatusType.CANCELLED
+                                || entity.getStatus() == PrescriptionStatusType.EXPIRED) {
+                        throw new PrescriptionAlreadyCancelledException();
+                }
 
-    @Transactional(readOnly = true)
-    public PrescriptionVerifyDto verifyByQrToken(UUID qrToken) {
-        PrescriptionEntity entity = prescriptionRepository.findByQrCodeToken(qrToken)
-                .orElseThrow(() -> new PrescriptionNotFoundException(null));
+                entity.setStatus(PrescriptionStatusType.CANCELLED);
+                PrescriptionEntity updated = prescriptionRepository.save(entity);
 
-        // Fetch patient name and DOB via JDBC to avoid cross-module dependency
-        String[] patientData = jdbcTemplate.queryForObject(
-                "SELECT first_name || ' ' || last_name, date_of_birth::text FROM patients WHERE id = ?",
-                (rs, row) -> new String[]{rs.getString(1), rs.getString(2)},
-                entity.getPatientId());
-
-        String clinicName = jdbcTemplate.queryForObject(
-                "SELECT name FROM tenants WHERE id = ?",
-                String.class, entity.getTenantId());
-
-        List<PrescriptionLineEntity> lines = prescriptionLineRepository
-                .findByTenantIdAndPrescriptionId(entity.getTenantId(), entity.getId());
-
-        return PrescriptionVerifyDto.builder()
-                .prescriptionNumber(entity.getPrescriptionNumber())
-                .patientName(patientData != null ? patientData[0] : null)
-                .dateOfBirth(patientData != null ? patientData[1] : null)
-                .prescriptionType(entity.getPrescriptionType().name())
-                .status(entity.getStatus().name())
-                .validFrom(entity.getValidFrom())
-                .validUntil(entity.getValidUntil())
-                .issuedByName(entity.getIssuedByName())
-                .clinicName(clinicName)
-                .pdBinocular(entity.getPdBinocular())
-                .lines(lines.stream().map(this::mapLineToDto).collect(Collectors.toList()))
-                .build();
-    }
-
-    // ── Nightly Expiry Scheduler ─────────────────────────────────────────────
-
-    /**
-     * Runs daily at 01:00 to expire prescriptions past their valid_until date.
-     * Per GUIDE_06 §5.4.
-     */
-    @Scheduled(cron = "0 0 1 * * *")
-    @Transactional
-    public void expireOverduePrescriptions() {
-        List<PrescriptionEntity> expired = prescriptionRepository.findExpired();
-        if (expired.isEmpty()) {
-            return;
-        }
-        expired.forEach(p -> p.setStatus(PrescriptionStatusType.EXPIRED));
-        prescriptionRepository.saveAll(expired);
-        log.info("expireOverduePrescriptions: expired {} prescriptions", expired.size());
-    }
-
-    // ── PDF Generation ──────────────────────────────────────────────────────
-
-    /**
-     * Generates (or retrieves cached) prescription PDF.
-     * Cache-on-generate: stores pdfPath on entity after first generation.
-     * Returns presigned MinIO URL with 1-hour expiry.
-     */
-    @Transactional
-    public PdfDownloadResponse generatePdf(UUID tenantId, UUID id) {
-        PrescriptionEntity entity = getEntityOrThrow(tenantId, id);
-
-        // Cache-on-generate: if already generated, return presigned URL
-        if (entity.getPdfPath() != null && !entity.getPdfPath().isBlank()) {
-            String url = documentStorageService.generatePresignedUrl(MINIO_BUCKET, entity.getPdfPath(), 1);
-            return new PdfDownloadResponse(url, Instant.now().plusSeconds(3600));
+                List<PrescriptionLineEntity> lines = prescriptionLineRepository
+                                .findByTenantIdAndPrescriptionId(tenantId, id);
+                return mapToDto(updated, lines);
         }
 
-        // Fetch cross-module data via JDBC (same pattern as verifyByQrToken)
-        String[] patientData = jdbcTemplate.queryForObject(
-                "SELECT first_name || ' ' || last_name, date_of_birth::text, mrn FROM patients WHERE id = ? AND tenant_id = ?",
-                (rs, row) -> new String[]{rs.getString(1), rs.getString(2), rs.getString(3)},
-                entity.getPatientId(), tenantId);
+        // ── Public QR Verify (no tenant context needed) ─────────────────────────
 
-        String clinicName = jdbcTemplate.queryForObject(
-                "SELECT name FROM tenants WHERE id = ?",
-                String.class, tenantId);
+        @Transactional(readOnly = true)
+        public PrescriptionVerifyDto verifyByQrToken(UUID qrToken) {
+                PrescriptionEntity entity = prescriptionRepository.findByQrCodeToken(qrToken)
+                                .orElseThrow(() -> new PrescriptionNotFoundException(null));
 
-        List<PrescriptionLineEntity> lines = prescriptionLineRepository
-                .findByTenantIdAndPrescriptionId(tenantId, id);
+                // Fetch patient name and DOB via JDBC to avoid cross-module dependency
+                String[] patientData = jdbcTemplate.queryForObject(
+                                "SELECT first_name || ' ' || last_name, date_of_birth::text FROM patients WHERE id = ?",
+                                (rs, row) -> new String[] { rs.getString(1), rs.getString(2) },
+                                entity.getPatientId());
 
-        // Map lines to PDF data records
-        List<PdfGenerationService.RefractionLine> pdfLines = lines.stream()
-                .map(line -> new PdfGenerationService.RefractionLine(
-                        line.getEye(),
-                        line.getSph(),
-                        line.getCyl(),
-                        line.getAxis(),
-                        line.getAddPower(),
-                        line.getVaCc(),
-                        line.getBcva(),
-                        line.getSeq()
-                ))
-                .toList();
+                String clinicName = jdbcTemplate.queryForObject(
+                                "SELECT name FROM tenants WHERE id = ?",
+                                String.class, entity.getTenantId());
 
-        // Generate PDF
-        byte[] pdfBytes = pdfGenerationService.generatePrescriptionPdf(
-                clinicName,
-                entity.getIssuedByName(),
-                patientData != null ? patientData[0] : null,
-                patientData != null ? patientData[1] : null,
-                patientData != null ? patientData[2] : null,
-                entity.getPrescriptionNumber(),
-                entity.getPrescriptionType().name(),
-                entity.getValidFrom(),
-                entity.getValidUntil(),
-                entity.getPdBinocular(),
-                entity.getPdOd(),
-                entity.getPdOs(),
-                entity.getLensType() != null ? entity.getLensType().name() : null,
-                entity.getLensMaterial(),
-                entity.getLensCoating(),
-                entity.getClinicalNotes(),
-                entity.getPatientInstructions(),
-                entity.getQrCodeToken().toString(),
-                pdfLines
-        );
+                List<PrescriptionLineEntity> lines = prescriptionLineRepository
+                                .findByTenantIdAndPrescriptionId(entity.getTenantId(), entity.getId());
 
-        // Upload to MinIO
-        String objectPath = tenantId + "/prescriptions/" + id + ".pdf";
-        documentStorageService.upload(MINIO_BUCKET, objectPath, pdfBytes, "application/pdf");
-
-        // Cache the path on entity
-        entity.setPdfPath(objectPath);
-        prescriptionRepository.save(entity);
-
-        String url = documentStorageService.generatePresignedUrl(MINIO_BUCKET, objectPath, 1);
-        log.info("generatePdf: prescription={}, size={} bytes", id, pdfBytes.length);
-        return new PdfDownloadResponse(url, Instant.now().plusSeconds(3600));
-    }
-
-    // ── Private Helpers ──────────────────────────────────────────────────────
-
-    private PrescriptionEntity getEntityOrThrow(UUID tenantId, UUID id) {
-        return prescriptionRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new PrescriptionNotFoundException(id));
-    }
-
-    private PrescriptionLineEntity buildLine(PrescriptionLineRequest req, UUID prescriptionId) {
-        BigDecimal seq = computeSeq(req.getSph(), req.getCyl());
-        return PrescriptionLineEntity.builder()
-                .prescriptionId(prescriptionId)
-                .eye(req.getEye().toUpperCase())
-                .sph(req.getSph())
-                .cyl(req.getCyl())
-                .axis(req.getAxis())
-                .addPower(req.getAddPower())
-                .vaSc(req.getVaSc())
-                .vaCc(req.getVaCc())
-                .bcva(req.getBcva())
-                .seq(seq)
-                .build();
-    }
-
-    /**
-     * SEQ = Sph + Cyl/2, rounded to 0.25D. Per GUIDE_06 §3.2.
-     * Uses Math.round semantics (rounds toward +infinity at 0.5 midpoints)
-     * matching the existing SeqCalculator contract.
-     * Example: Sph=-2.50, Cyl=-0.75 → raw=-2.875 → *4=-11.5 → Math.round→-11 → -2.75
-     */
-    private BigDecimal computeSeq(BigDecimal sph, BigDecimal cyl) {
-        if (sph == null || cyl == null) {
-            return null;
+                return PrescriptionVerifyDto.builder()
+                                .prescriptionNumber(entity.getPrescriptionNumber())
+                                .patientName(patientData != null ? patientData[0] : null)
+                                .dateOfBirth(patientData != null ? patientData[1] : null)
+                                .prescriptionType(entity.getPrescriptionType().name())
+                                .status(entity.getStatus().name())
+                                .validFrom(entity.getValidFrom())
+                                .validUntil(entity.getValidUntil())
+                                .issuedByName(entity.getIssuedByName())
+                                .clinicName(clinicName)
+                                .pdBinocular(entity.getPdBinocular())
+                                .lines(lines.stream().map(this::mapLineToDto).collect(Collectors.toList()))
+                                .build();
         }
-        BigDecimal raw = sph.add(cyl.divide(BigDecimal.valueOf(2)));
-        // Multiply by 4, round to nearest integer using Math.round (toward +infinity at 0.5),
-        // then divide back by 4 and return with 2dp.
-        long rounded = Math.round(raw.multiply(BigDecimal.valueOf(4)).doubleValue());
-        return BigDecimal.valueOf(rounded).divide(BigDecimal.valueOf(4)).setScale(2, RoundingMode.HALF_UP);
-    }
 
-    private PrescriptionDto mapToDto(PrescriptionEntity entity, List<PrescriptionLineEntity> lines) {
-        return PrescriptionDto.builder()
-                .id(entity.getId())
-                .patientId(entity.getPatientId())
-                .consultationId(entity.getConsultationId())
-                .prescriptionNumber(entity.getPrescriptionNumber())
-                .prescriptionType(entity.getPrescriptionType())
-                .status(entity.getStatus())
-                .issuedById(entity.getIssuedById())
-                .issuedByName(entity.getIssuedByName())
-                .issuedAt(entity.getIssuedAt())
-                .validFrom(entity.getValidFrom())
-                .validUntil(entity.getValidUntil())
-                .pdBinocular(entity.getPdBinocular())
-                .pdOd(entity.getPdOd())
-                .pdOs(entity.getPdOs())
-                .prismOd(entity.getPrismOd())
-                .prismOs(entity.getPrismOs())
-                .lensType(entity.getLensType())
-                .lensMaterial(entity.getLensMaterial())
-                .lensCoating(entity.getLensCoating())
-                .frameRecommendation(entity.getFrameRecommendation())
-                .clinicalNotes(entity.getClinicalNotes())
-                .patientInstructions(entity.getPatientInstructions())
-                .supersededById(entity.getSupersededById())
-                .qrCodeToken(entity.getQrCodeToken().toString())
-                .qrVerifyUrl(QR_BASE_URL + entity.getQrCodeToken())
-                .signedAt(entity.getSignedAt())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .lines(lines.stream().map(this::mapLineToDto).collect(Collectors.toList()))
-                .build();
-    }
+        // ── Nightly Expiry Scheduler ─────────────────────────────────────────────
 
-    private PrescriptionLineDto mapLineToDto(PrescriptionLineEntity line) {
-        return PrescriptionLineDto.builder()
-                .eye(line.getEye())
-                .sph(line.getSph())
-                .cyl(line.getCyl())
-                .axis(line.getAxis())
-                .addPower(line.getAddPower())
-                .vaSc(line.getVaSc())
-                .vaCc(line.getVaCc())
-                .bcva(line.getBcva())
-                .seq(line.getSeq())
-                .build();
-    }
+        /**
+         * Runs daily at 01:00 to expire prescriptions past their valid_until date.
+         * Per GUIDE_06 §5.4.
+         */
+        @Scheduled(cron = "0 0 1 * * *")
+        @Transactional
+        public void expireOverduePrescriptions() {
+                List<PrescriptionEntity> expired = prescriptionRepository.findExpired();
+                if (expired.isEmpty()) {
+                        return;
+                }
+                expired.forEach(p -> p.setStatus(PrescriptionStatusType.EXPIRED));
+                prescriptionRepository.saveAll(expired);
+                log.info("expireOverduePrescriptions: expired {} prescriptions", expired.size());
+        }
+
+        // ── PDF Generation ──────────────────────────────────────────────────────
+
+        /**
+         * Generates (or retrieves cached) prescription PDF.
+         * Cache-on-generate: stores pdfPath on entity after first generation.
+         * Returns presigned MinIO URL with 1-hour expiry.
+         */
+        @Transactional
+        public PdfDownloadResponse generatePdf(UUID tenantId, UUID id) {
+                PrescriptionEntity entity = getEntityOrThrow(tenantId, id);
+
+                // Cache-on-generate: if already generated, return presigned URL
+                if (entity.getPdfPath() != null && !entity.getPdfPath().isBlank()) {
+                        String url = documentStorageService.generatePresignedUrl(MINIO_BUCKET, entity.getPdfPath(), 1);
+                        return new PdfDownloadResponse(url, Instant.now().plusSeconds(3600));
+                }
+
+                // Fetch cross-module data via JDBC (same pattern as verifyByQrToken)
+                String[] patientData = jdbcTemplate.queryForObject(
+                                "SELECT first_name || ' ' || last_name, date_of_birth::text, mrn FROM patients WHERE id = ? AND tenant_id = ?",
+                                (rs, row) -> new String[] { rs.getString(1), rs.getString(2), rs.getString(3) },
+                                entity.getPatientId(), tenantId);
+
+                String clinicName = jdbcTemplate.queryForObject(
+                                "SELECT name FROM tenants WHERE id = ?",
+                                String.class, tenantId);
+
+                List<PrescriptionLineEntity> lines = prescriptionLineRepository
+                                .findByTenantIdAndPrescriptionId(tenantId, id);
+
+                // Map lines to PDF data records
+                List<PdfGenerationService.RefractionLine> pdfLines = lines.stream()
+                                .map(line -> new PdfGenerationService.RefractionLine(
+                                                line.getEye(),
+                                                line.getSph(),
+                                                line.getCyl(),
+                                                line.getAxis(),
+                                                line.getAddPower(),
+                                                line.getVaCc(),
+                                                line.getBcva(),
+                                                line.getSeq()))
+                                .toList();
+
+                // Generate PDF
+                byte[] pdfBytes = pdfGenerationService.generatePrescriptionPdf(
+                                clinicName,
+                                entity.getIssuedByName(),
+                                patientData != null ? patientData[0] : null,
+                                patientData != null ? patientData[1] : null,
+                                patientData != null ? patientData[2] : null,
+                                entity.getPrescriptionNumber(),
+                                entity.getPrescriptionType().name(),
+                                entity.getValidFrom(),
+                                entity.getValidUntil(),
+                                entity.getPdBinocular(),
+                                entity.getPdOd(),
+                                entity.getPdOs(),
+                                entity.getLensType() != null ? entity.getLensType().name() : null,
+                                entity.getLensMaterial(),
+                                entity.getLensCoating(),
+                                entity.getClinicalNotes(),
+                                entity.getPatientInstructions(),
+                                entity.getQrCodeToken().toString(),
+                                pdfLines);
+
+                // Upload to MinIO
+                String objectPath = tenantId + "/prescriptions/" + id + ".pdf";
+                documentStorageService.upload(MINIO_BUCKET, objectPath, pdfBytes, "application/pdf");
+
+                // Cache the path on entity
+                entity.setPdfPath(objectPath);
+                prescriptionRepository.save(entity);
+
+                String url = documentStorageService.generatePresignedUrl(MINIO_BUCKET, objectPath, 1);
+                log.info("generatePdf: prescription={}, size={} bytes", id, pdfBytes.length);
+                return new PdfDownloadResponse(url, Instant.now().plusSeconds(3600));
+        }
+
+        // ── Private Helpers ──────────────────────────────────────────────────────
+
+        private PrescriptionEntity getEntityOrThrow(UUID tenantId, UUID id) {
+                return prescriptionRepository.findByIdAndTenantId(id, tenantId)
+                                .orElseThrow(() -> new PrescriptionNotFoundException(id));
+        }
+
+        private PrescriptionLineEntity buildLine(PrescriptionLineRequest req, UUID prescriptionId) {
+                BigDecimal seq = computeSeq(req.getSph(), req.getCyl());
+                return PrescriptionLineEntity.builder()
+                                .prescriptionId(prescriptionId)
+                                .eye(req.getEye().toUpperCase())
+                                .sph(req.getSph())
+                                .cyl(req.getCyl())
+                                .axis(req.getAxis())
+                                .addPower(req.getAddPower())
+                                .vaSc(req.getVaSc())
+                                .vaCc(req.getVaCc())
+                                .bcva(req.getBcva())
+                                .seq(seq)
+                                .build();
+        }
+
+        /**
+         * SEQ = Sph + Cyl/2, rounded to 0.25D. Per GUIDE_06 §3.2.
+         * Uses Math.round semantics (rounds toward +infinity at 0.5 midpoints)
+         * matching the existing SeqCalculator contract.
+         * Example: Sph=-2.50, Cyl=-0.75 → raw=-2.875 → *4=-11.5 → Math.round→-11 →
+         * -2.75
+         */
+        private BigDecimal computeSeq(BigDecimal sph, BigDecimal cyl) {
+                if (sph == null || cyl == null) {
+                        return null;
+                }
+                BigDecimal raw = sph.add(cyl.divide(BigDecimal.valueOf(2)));
+                // Multiply by 4, round to nearest integer using Math.round (toward +infinity at
+                // 0.5),
+                // then divide back by 4 and return with 2dp.
+                long rounded = Math.round(raw.multiply(BigDecimal.valueOf(4)).doubleValue());
+                return BigDecimal.valueOf(rounded).divide(BigDecimal.valueOf(4)).setScale(2, RoundingMode.HALF_UP);
+        }
+
+        private PrescriptionDto mapToDto(PrescriptionEntity entity, List<PrescriptionLineEntity> lines) {
+                return PrescriptionDto.builder()
+                                .id(entity.getId())
+                                .patientId(entity.getPatientId())
+                                .consultationId(entity.getConsultationId())
+                                .prescriptionNumber(entity.getPrescriptionNumber())
+                                .prescriptionType(entity.getPrescriptionType())
+                                .status(entity.getStatus())
+                                .issuedById(entity.getIssuedById())
+                                .issuedByName(entity.getIssuedByName())
+                                .issuedAt(entity.getIssuedAt())
+                                .validFrom(entity.getValidFrom())
+                                .validUntil(entity.getValidUntil())
+                                .pdBinocular(entity.getPdBinocular())
+                                .pdOd(entity.getPdOd())
+                                .pdOs(entity.getPdOs())
+                                .prismOd(entity.getPrismOd())
+                                .prismOs(entity.getPrismOs())
+                                .lensType(entity.getLensType())
+                                .lensMaterial(entity.getLensMaterial())
+                                .lensCoating(entity.getLensCoating())
+                                .frameRecommendation(entity.getFrameRecommendation())
+                                .clinicalNotes(entity.getClinicalNotes())
+                                .patientInstructions(entity.getPatientInstructions())
+                                .supersededById(entity.getSupersededById())
+                                .qrCodeToken(entity.getQrCodeToken().toString())
+                                .qrVerifyUrl(QR_BASE_URL + entity.getQrCodeToken())
+                                .signedAt(entity.getSignedAt())
+                                .createdAt(entity.getCreatedAt())
+                                .updatedAt(entity.getUpdatedAt())
+                                .lines(lines.stream().map(this::mapLineToDto).collect(Collectors.toList()))
+                                .build();
+        }
+
+        private PrescriptionLineDto mapLineToDto(PrescriptionLineEntity line) {
+                return PrescriptionLineDto.builder()
+                                .eye(line.getEye())
+                                .sph(line.getSph())
+                                .cyl(line.getCyl())
+                                .axis(line.getAxis())
+                                .addPower(line.getAddPower())
+                                .vaSc(line.getVaSc())
+                                .vaCc(line.getVaCc())
+                                .bcva(line.getBcva())
+                                .seq(line.getSeq())
+                                .build();
+        }
 }

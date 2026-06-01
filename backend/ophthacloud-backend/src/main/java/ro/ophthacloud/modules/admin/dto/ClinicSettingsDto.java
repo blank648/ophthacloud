@@ -3,6 +3,7 @@ package ro.ophthacloud.modules.admin.dto;
 import ro.ophthacloud.modules.admin.internal.ClinicSettingsEntity;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 /**
  * DTO for clinic settings response.
@@ -18,9 +19,17 @@ public record ClinicSettingsDto(
         boolean portalAppointmentBooking,
         String invoicePrefix,
         String orderNumberPrefix,
-        String prescriptionPrefix
+        String prescriptionPrefix,
+        LocalTime quietHoursStart,
+        LocalTime quietHoursEnd,
+        Integer maxSmsPerPatient,
+        String name,
+        String cui,
+        String phone,
+        String email,
+        String address
 ) {
-    public static ClinicSettingsDto from(ClinicSettingsEntity entity) {
+    public static ClinicSettingsDto from(ClinicSettingsEntity entity, String name, String cui, String phone, String email, String address) {
         return new ClinicSettingsDto(
                 entity.getWorkingHours(),
                 entity.getBookingSlotMinutes(),
@@ -31,7 +40,15 @@ public record ClinicSettingsDto(
                 entity.getPortalAppointmentBooking(),
                 entity.getInvoicePrefix(),
                 entity.getOrderNumberPrefix(),
-                entity.getPrescriptionPrefix()
+                entity.getPrescriptionPrefix(),
+                entity.getQuietHoursStart(),
+                entity.getQuietHoursEnd(),
+                entity.getMaxSmsPerPatient(),
+                name,
+                cui,
+                phone,
+                email,
+                address
         );
     }
 }

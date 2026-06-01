@@ -61,6 +61,17 @@ public class KeycloakAdminService {
         log.info("Updated Keycloak user {}", userId);
     }
 
+    public UserRepresentation getUser(String userId) {
+        log.info("KeycloakAdminService.getUser: realm='{}', userId='{}'", realm, userId);
+        if (realm == null || realm.isBlank()) {
+            throw new IllegalArgumentException("Keycloak realm configuration is missing or null");
+        }
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("Keycloak userId is missing or null");
+        }
+        return keycloak.realm(realm).users().get(userId).toRepresentation();
+    }
+
     public void assignTenantMemberRole(String userId) {
         RealmResource realmResource = keycloak.realm(realm);
         UserResource userResource = realmResource.users().get(userId);

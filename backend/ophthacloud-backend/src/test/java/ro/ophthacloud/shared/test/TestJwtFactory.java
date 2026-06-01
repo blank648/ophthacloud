@@ -104,7 +104,7 @@ public final class TestJwtFactory {
      * RECEPTIONIST receives only VIEW on all modules.
      */
     private static Map<String, Object> buildPermissions(String role) {
-        boolean fullAccess = "DOCTOR".equals(role) || "ADMIN".equals(role);
+        boolean fullAccess = "DOCTOR".equals(role) || "ADMIN".equals(role) || "CLINIC_ADMIN".equals(role);
 
         Map<String, Object> permissions = new HashMap<>();
         for (String module : ALL_MODULES) {

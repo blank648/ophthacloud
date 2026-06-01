@@ -64,7 +64,7 @@ class ReportsControllerIntegrationTest extends BaseIntegrationTest {
     void getDashboardKpis_shouldReturn200WithKpiStructure() {
         var response = client.get()
                 .uri("/api/v1/reports/dashboard-kpis")
-                .headers(h -> h.putAll(headersForRole("ADMIN", TENANT_ID)))
+                .headers(h -> h.putAll(headersForRole("CLINIC_ADMIN", TENANT_ID)))
                 .retrieve()
                 .toEntity(new ParameterizedTypeReference<Map<?, ?>>() {});
 
@@ -121,7 +121,7 @@ class ReportsControllerIntegrationTest extends BaseIntegrationTest {
 
         var response = client.get()
                 .uri("/api/v1/reports/dashboard-kpis")
-                .headers(h -> h.putAll(headersForRole("ADMIN", TENANT_ID)))
+                .headers(h -> h.putAll(headersForRole("CLINIC_ADMIN", TENANT_ID)))
                 .retrieve()
                 .toEntity(new ParameterizedTypeReference<Map<?, ?>>() {});
 
@@ -139,7 +139,7 @@ class ReportsControllerIntegrationTest extends BaseIntegrationTest {
     void getAppointmentStatistics_withGroupByWeek_shouldReturn200() {
         var response = client.get()
                 .uri("/api/v1/reports/appointments?from=2026-01-01&to=2026-03-31&groupBy=week")
-                .headers(h -> h.putAll(headersForRole("ADMIN", TENANT_ID)))
+                .headers(h -> h.putAll(headersForRole("CLINIC_ADMIN", TENANT_ID)))
                 .retrieve()
                 .toEntity(new ParameterizedTypeReference<Map<?, ?>>() {});
 
@@ -155,7 +155,7 @@ class ReportsControllerIntegrationTest extends BaseIntegrationTest {
     void getAppointmentStatistics_withDateRangeOver1Year_shouldReturn400() {
         var response = client.get()
                 .uri("/api/v1/reports/appointments?from=2024-01-01&to=2026-12-31&groupBy=month")
-                .headers(h -> h.putAll(headersForRole("ADMIN", TENANT_ID)))
+                .headers(h -> h.putAll(headersForRole("CLINIC_ADMIN", TENANT_ID)))
                 .retrieve()
                 .toEntity(new ParameterizedTypeReference<Map<?, ?>>() {});
 
@@ -189,7 +189,7 @@ class ReportsControllerIntegrationTest extends BaseIntegrationTest {
     void getPatientDemographics_shouldReturn200WithDistributions() {
         var response = client.get()
                 .uri("/api/v1/reports/patients/demographics")
-                .headers(h -> h.putAll(headersForRole("ADMIN", TENANT_ID)))
+                .headers(h -> h.putAll(headersForRole("CLINIC_ADMIN", TENANT_ID)))
                 .retrieve()
                 .toEntity(new ParameterizedTypeReference<Map<?, ?>>() {});
 

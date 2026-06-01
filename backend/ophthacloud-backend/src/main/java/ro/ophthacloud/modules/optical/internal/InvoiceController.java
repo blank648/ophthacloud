@@ -13,6 +13,7 @@ import ro.ophthacloud.shared.api.ApiResponse;
 import ro.ophthacloud.shared.api.PdfDownloadResponse;
 import ro.ophthacloud.shared.security.SecurityUtils;
 
+import java.util.List;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,18 +26,39 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
+    private final InvoiceRepository invoiceRepository;
+    private final InvoiceLineRepository invoiceLineRepository;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasPermission('optical', 'MODULE', 'CREATE')")
-    @Operation(summary = "Create an invoice for an optical order")
+    @Operation(summary = "Create an invoice")
     public ApiResponse<InvoiceDto> createInvoice(@RequestBody @Valid CreateInvoiceRequest request) {
         return ApiResponse.of(invoiceService.createInvoice(
                 TenantContext.require(),
                 request.opticalOrderId(),
                 request.patientId(),
-                UUID.fromString(SecurityUtils.currentStaffId())
+                UUID.fromString(SecurityUtils.currentStaffId()),
+                request.items()
         ));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CLINIC_ADMIN', 'DOCTOR', 'RECEPTIONIST', 'OPTOMETRIST', 'NURSE', 'OPTICAL_TECHNICIAN', 'MANAGER')")
+    @Operation(summary = "List all invoices for the tenant")
+    public ApiResponse<List<InvoiceDto>> listInvoices(@RequestParam(required = false) InvoiceStatus status) {
+        UUID tenantId = TenantContext.require();
+        List<InvoiceEntity> entities = status != null
+                ? invoiceRepository.findByTenantIdAndStatus(tenantId, status)
+                : invoiceRepository.findAll().stream().filter(i -> i.getTenantId().equals(tenantId)).toList();
+
+        return ApiResponse.of(entities.stream()
+                .map(entity -> {
+                    String patientName = invoiceService.fetchPatientName(entity.getPatientId());
+                    List<InvoiceLineEntity> lines = invoiceLineRepository.findByInvoiceId(entity.getId());
+                    return InvoiceDto.from(entity, lines, patientName);
+                })
+                .toList());
     }
 
     @GetMapping("/{id}")

@@ -9,9 +9,7 @@ import ro.ophthacloud.modules.investigations.dto.CreateInvestigationRequest;
 import ro.ophthacloud.modules.investigations.dto.InvestigationDto;
 import ro.ophthacloud.modules.investigations.dto.InvestigationFileDto;
 import ro.ophthacloud.modules.investigations.dto.UpdateInvestigationResultRequest;
-import ro.ophthacloud.modules.investigations.internal.InvestigationCategoryType;
 import ro.ophthacloud.modules.investigations.internal.InvestigationService;
-import ro.ophthacloud.modules.investigations.internal.InvestigationStatusType;
 
 import java.util.UUID;
 

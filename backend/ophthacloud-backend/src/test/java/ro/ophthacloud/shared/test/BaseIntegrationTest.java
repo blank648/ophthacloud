@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -13,8 +12,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.client.RestClient;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.UUID;
 
@@ -36,24 +33,29 @@ import java.util.UUID;
  * </ul>
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
 
     // ── Testcontainers ────────────────────────────────────────────────────────
 
-    @Container
-    @ServiceConnection
     @SuppressWarnings("resource")
-    static final PostgreSQLContainer POSTGRES =
-            new PostgreSQLContainer("postgres:16-alpine")
-                    .withReuse(true);
+    static final PostgreSQLContainer POSTGRES;
 
-    @Container
     @SuppressWarnings("resource")
-    static final GenericContainer<?> REDIS =
-            new GenericContainer<>("redis:7-alpine").withExposedPorts(6379)
-                    .withReuse(true);
+    static final GenericContainer<?> REDIS;
+
+    static {
+        PostgreSQLContainer pg = new PostgreSQLContainer("postgres:16-alpine");
+        pg.withReuse(true);
+        POSTGRES = pg;
+        POSTGRES.start();
+
+        GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine");
+        redis.withExposedPorts(6379);
+        redis.withReuse(true);
+        REDIS = redis;
+        REDIS.start();
+    }
 
     // ── Dynamic properties ────────────────────────────────────────────────────
 

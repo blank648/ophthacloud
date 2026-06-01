@@ -10,20 +10,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class KeycloakAdminConfig {
 
-    @Value("${ophthacloud.keycloak.admin-url}")
-    private String serverUrl;
-
-    @Value("${ophthacloud.keycloak.realm}")
-    private String realm;
-
-    @Value("${ophthacloud.keycloak.client-id}")
-    private String clientId;
-
-    @Value("${ophthacloud.keycloak.client-secret:}")
-    private String clientSecret;
-
     @Bean
-    public Keycloak keycloak() {
+    public static Keycloak keycloak(
+            @Value("${ophthacloud.keycloak.admin-url}") String serverUrl,
+            @Value("${ophthacloud.keycloak.realm}") String realm,
+            @Value("${ophthacloud.keycloak.client-id}") String clientId,
+            @Value("${ophthacloud.keycloak.client-secret:}") String clientSecret) {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
                 .realm(realm)

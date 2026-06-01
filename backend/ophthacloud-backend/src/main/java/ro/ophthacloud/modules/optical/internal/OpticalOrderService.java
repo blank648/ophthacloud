@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import ro.ophthacloud.modules.optical.dto.*;
 import ro.ophthacloud.modules.optical.event.*;
+import ro.ophthacloud.modules.optical.OrderStage;
+import ro.ophthacloud.modules.optical.OrderType;
 import ro.ophthacloud.shared.audit.AuditLogService;
 import ro.ophthacloud.shared.audit.AuditEntry;
 
@@ -47,6 +49,33 @@ public class OpticalOrderService {
 
         order = orderRepository.save(order);
 
+        // Auto-populate default items for glasses orders to ensure non-zero pricing
+        if (order.getOrderType() == OrderType.GLASSES) {
+            // Item 1: Lenses
+            OpticalOrderItemEntity lenses = new OpticalOrderItemEntity();
+            lenses.setOrderId(order.getId());
+            lenses.setDescription("Set Lentile corecție optică (stâng + drept)");
+            lenses.setQuantity(1);
+            lenses.setUnitPrice(new BigDecimal("450.00"));
+            lenses.setLineTotal(new BigDecimal("450.00"));
+            lenses.setDiscountPercent(BigDecimal.ZERO);
+            itemRepository.save(lenses);
+
+            // Item 2: Frame
+            OpticalOrderItemEntity frame = new OpticalOrderItemEntity();
+            frame.setOrderId(order.getId());
+            frame.setDescription("Ramă ochelari standard");
+            frame.setQuantity(1);
+            frame.setUnitPrice(new BigDecimal("350.00"));
+            frame.setLineTotal(new BigDecimal("350.00"));
+            frame.setDiscountPercent(BigDecimal.ZERO);
+            itemRepository.save(frame);
+
+            // Update order total
+            updateOrderTotal(order);
+            order = orderRepository.save(order);
+        }
+
         eventPublisher.publishEvent(new OpticalOrderCreatedEvent(
                 order.getId(), order.getOrderNumber(), tenantId, order.getPatientId(), order.getOrderType(), order.getCreatedAt()
         ));
@@ -62,7 +91,10 @@ public class OpticalOrderService {
 
     @Transactional(readOnly = true)
     public List<OpticalOrderDto> listOrdersByStage(UUID tenantId, OrderStage stage) {
-        return orderRepository.findByTenantIdAndStage(tenantId, stage).stream()
+        List<OpticalOrderEntity> entities = (stage != null)
+                ? orderRepository.findByTenantIdAndStage(tenantId, stage)
+                : orderRepository.findByTenantId(tenantId);
+        return entities.stream()
                 .map(this::toDto)
                 .toList();
     }

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
+import { useAuthStore } from '@/stores/authStore';
+import { useClinicSettings } from '@/hooks/useAdmin';
 import OphthaLogo from '@/components/OphthaLogo';
 import {
   LayoutDashboard, Users, CalendarDays, Stethoscope, Eye, FileText,
@@ -58,9 +60,37 @@ const navGroups: NavGroup[] = [
   },
 ];
 
+let savedScrollTop = 0;
+
 const AppSidebar: React.FC = () => {
-  const { sidebarCollapsed, toggleSidebar, darkMode, toggleDarkMode, role } = useApp();
+  const { role, darkMode, toggleDarkMode, sidebarCollapsed, toggleSidebar } = useApp();
   const location = useLocation();
+  const userInfo = useAuthStore(s => s.userInfo);
+  const { data: clinicData } = useClinicSettings();
+  const navRef = React.useRef<HTMLElement>(null);
+
+  React.useEffect(() => {
+    if (navRef.current) {
+      navRef.current.scrollTop = savedScrollTop;
+    }
+  }, []);
+
+  const formatRole = (role: string) => {
+    switch (role) {
+      case 'DOCTOR': return 'Medic Oftalmolog';
+      case 'CLINIC_ADMIN': return 'Manager Clinică';
+      case 'RECEPTIONIST': return 'Recepție';
+      case 'OPTICIAN': return 'Optician';
+      default: return role;
+    }
+  };
+
+  const getInitials = () => {
+    if (!userInfo?.name) return 'U';
+    const parts = userInfo.name.split(' ');
+    if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length-1][0]}`.toUpperCase();
+    return parts[0].substring(0, 2).toUpperCase();
+  };
 
   const roleLabels: Record<string, string> = {
     doctor: 'Medic Oftalmolog',
@@ -86,12 +116,14 @@ const AppSidebar: React.FC = () => {
       {/* Clinic name */}
       {!sidebarCollapsed && (
         <div className="px-4 py-2">
-          <p className="text-[11px] text-primary-400 truncate">Clinica Oftalmologică Visiomed</p>
+          <p className="text-[11px] text-primary-400 truncate">
+            {clinicData?.name || 'Clinica Oftalmologică Demo SRL'}
+          </p>
         </div>
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-2 px-2">
+      <nav ref={navRef} onScroll={(e) => { savedScrollTop = e.currentTarget.scrollTop; }} className="flex-1 overflow-y-auto py-2 px-2">
         {navGroups.map((group) => (
           <div key={group.label} className="mb-4">
             {!sidebarCollapsed && (
@@ -137,27 +169,20 @@ const AppSidebar: React.FC = () => {
         </button>
 
         {/* User info */}
-        {!sidebarCollapsed && (
-          <div className="flex items-center gap-3 px-3 py-2">
+        {!sidebarCollapsed && userInfo && (
+          <Link to="/profile" className="flex items-center gap-3 px-3 py-2 hover:bg-[hsl(var(--color-bg-sidebar-hover))] rounded-md transition-colors cursor-pointer mb-2">
             <div className="w-8 h-8 rounded-full bg-primary-700 flex items-center justify-center text-white text-[11px] font-semibold">
-              AP
+              {getInitials()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] text-white font-medium truncate">Dr. Alex Popescu</p>
-              <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary-600 text-white">
-                {roleLabels[role]}
+              <p className="text-[13px] text-white font-medium truncate">{userInfo.name || 'User'}</p>
+              <span className="inline-block px-1.5 py-0.5 mt-0.5 rounded text-[10px] font-semibold bg-primary-600 text-white truncate max-w-full">
+                {formatRole(userInfo.role)}
               </span>
             </div>
-          </div>
+          </Link>
         )}
 
-        {/* Collapse toggle */}
-        <button
-          onClick={toggleSidebar}
-          className="flex items-center justify-center w-full h-8 rounded-md text-white/50 hover:text-white hover:bg-[hsl(var(--color-bg-sidebar-hover))] transition-colors"
-        >
-          {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </button>
       </div>
     </aside>
   );

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -79,6 +78,7 @@ class AdminFacadeTest {
     // ── Mocks for ClinicSettingsService dependencies ─────────────────────────
 
     @Mock private ClinicSettingsRepository clinicSettingsRepository;
+    @Mock private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     private ro.ophthacloud.modules.admin.internal.ClinicSettingsService clinicSettingsService;
 
@@ -92,9 +92,9 @@ class AdminFacadeTest {
 
     @BeforeEach
     void setUp() {
-        adminService = new AdminService(staffMemberRepository, keycloakAdminService);
+        adminService = new AdminService(staffMemberRepository, keycloakAdminService, permissionRepository, objectMapper);
         permissionsService = new PermissionsService(permissionRepository, staffMemberRepository, keycloakAdminService, objectMapper, auditLogService);
-        clinicSettingsService = new ClinicSettingsService(clinicSettingsRepository);
+        clinicSettingsService = new ClinicSettingsService(clinicSettingsRepository, jdbcTemplate);
         facade = new AdminFacade(adminService, permissionsService, clinicSettingsService, staffMemberRepository);
 
         TenantContext.set(TENANT_ID);
@@ -126,7 +126,7 @@ class AdminFacadeTest {
         when(keycloakAdminService.createUser(anyString(), anyString(), anyString()))
                 .thenReturn(KEYCLOAK_USER_ID);
         doNothing().when(keycloakAdminService).assignTenantMemberRole(anyString());
-        doNothing().when(keycloakAdminService).setAttributes(anyString(), any(), any(), any(), anyString());
+        doNothing().when(keycloakAdminService).setAttributes(anyString(), any(), any(), any(), any());
 
         when(staffMemberRepository.saveAndFlush(any(StaffMemberEntity.class)))
                 .thenAnswer(inv -> {
@@ -151,7 +151,7 @@ class AdminFacadeTest {
 
         // Verify step 3: Keycloak attributes set
         verify(keycloakAdminService).setAttributes(
-                eq(KEYCLOAK_USER_ID), eq(TENANT_ID), eq(STAFF_ID), eq(StaffRole.DOCTOR), anyString());
+                eq(KEYCLOAK_USER_ID), eq(TENANT_ID), eq(STAFF_ID), eq(StaffRole.DOCTOR), any());
 
         assertThat(result).isNotNull();
         assertThat(result.email()).isEqualTo("dr.popa@clinic.ro");
@@ -193,7 +193,7 @@ class AdminFacadeTest {
         when(keycloakAdminService.createUser(anyString(), anyString(), anyString()))
                 .thenReturn(KEYCLOAK_USER_ID);
         doNothing().when(keycloakAdminService).assignTenantMemberRole(anyString());
-        doNothing().when(keycloakAdminService).setAttributes(anyString(), any(), any(), any(), anyString());
+        doNothing().when(keycloakAdminService).setAttributes(anyString(), any(), any(), any(), any());
         doNothing().when(keycloakAdminService).sendVerifyEmail(anyString());
 
         when(staffMemberRepository.saveAndFlush(any(StaffMemberEntity.class)))
@@ -255,7 +255,7 @@ class AdminFacadeTest {
 
         when(permissionRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
         doNothing().when(permissionRepository).deleteByTenantIdAndRole(any(), any());
-        doNothing().when(keycloakAdminService).setAttributes(anyString(), any(), any(), any(), anyString());
+        doNothing().when(keycloakAdminService).setAttributes(anyString(), any(), any(), any(), any());
         doNothing().when(keycloakAdminService).invalidateSessions(anyString());
 
         facade.updatePermissions(req);
@@ -269,7 +269,7 @@ class AdminFacadeTest {
 
         // Step 3: Keycloak attributes updated for affected user
         verify(keycloakAdminService).setAttributes(
-                eq(KEYCLOAK_USER_ID), eq(TENANT_ID), eq(STAFF_ID), eq(StaffRole.RECEPTIONIST), anyString());
+                eq(KEYCLOAK_USER_ID), eq(TENANT_ID), eq(STAFF_ID), eq(StaffRole.RECEPTIONIST), any());
 
         // Step 4: Active sessions invalidated
         verify(keycloakAdminService).invalidateSessions(eq(KEYCLOAK_USER_ID));
@@ -284,7 +284,7 @@ class AdminFacadeTest {
     @DisplayName("ClinicSettingsService: should reject invalid bookingSlotMinutes")
     void updateClinicSettings_shouldReject_invalidSlotMinutes() {
         var req = new ro.ophthacloud.modules.admin.dto.UpdateClinicSettingsRequest(
-                null, 13, null, null, null, null, null, null, null
+                null, 13, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
         );
 
         assertThatThrownBy(() -> clinicSettingsService.updateClinicSettings(req))
@@ -298,7 +298,7 @@ class AdminFacadeTest {
     @DisplayName("ClinicSettingsService: should reject invalid vatRateDefault")
     void updateClinicSettings_shouldReject_invalidVatRate() {
         var req = new ro.ophthacloud.modules.admin.dto.UpdateClinicSettingsRequest(
-                null, null, null, new java.math.BigDecimal("7"), null, null, null, null, null
+                null, null, null, new java.math.BigDecimal("7"), null, null, null, null, null, null, null, null, null, null, null, null, null
         );
 
         assertThatThrownBy(() -> clinicSettingsService.updateClinicSettings(req))
@@ -315,7 +315,7 @@ class AdminFacadeTest {
     @DisplayName("ClinicSettingsService: should reject bookingAdvanceDays=0")
     void updateClinicSettings_shouldReject_zeroBookingAdvanceDays() {
         var req = new ro.ophthacloud.modules.admin.dto.UpdateClinicSettingsRequest(
-                null, null, 0, null, null, null, null, null, null
+                null, null, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null
         );
 
         assertThatThrownBy(() -> clinicSettingsService.updateClinicSettings(req))

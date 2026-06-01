@@ -16,4 +16,8 @@ public interface ConsultationRepository extends JpaRepository<ConsultationEntity
 
     /** Tenant-safe primary-key lookup — use instead of findById to enforce @Filter for PK queries. */
     Optional<ConsultationEntity> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("SELECT c FROM ConsultationEntity c WHERE c.id = :id AND c.tenantId = :tenantId")
+    Optional<ConsultationEntity> findByIdAndTenantIdForUpdate(@org.springframework.data.repository.query.Param("id") UUID id, @org.springframework.data.repository.query.Param("tenantId") UUID tenantId);
 }

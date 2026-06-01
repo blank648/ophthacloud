@@ -9,6 +9,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.stereotype.Component;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +32,8 @@ import java.util.Map;
 @Component
 @Slf4j
 public class OphthaClinicalJwtConverter implements Converter<Jwt, AbstractAuthenticationToken> {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
@@ -82,8 +87,19 @@ public class OphthaClinicalJwtConverter implements Converter<Jwt, AbstractAuthen
             return Collections.emptyMap();
         }
 
-        if (!(raw instanceof Map<?, ?> rawMap)) {
-            log.warn("JWT permissions claim is not a Map for subject={}", jwt.getSubject());
+        Map<?, ?> rawMap = null;
+
+        if (raw instanceof Map<?, ?> m) {
+            rawMap = m;
+        } else if (raw instanceof String s) {
+            try {
+                rawMap = objectMapper.readValue(s, new TypeReference<Map<String, Object>>() {});
+            } catch (Exception e) {
+                log.warn("Failed to parse JWT permissions string claim for subject={}", jwt.getSubject(), e);
+                return Collections.emptyMap();
+            }
+        } else {
+            log.warn("JWT permissions claim is neither a Map nor a String for subject={}", jwt.getSubject());
             return Collections.emptyMap();
         }
 

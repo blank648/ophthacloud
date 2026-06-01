@@ -31,6 +31,7 @@ public class NotificationsFacade {
     private final NotificationLogRepository notificationLogRepository;
     private final NotificationRuleRepository notificationRuleRepository;
     private final RecallProtocolRepository recallProtocolRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     private final ObjectMapper objectMapper;
 
@@ -99,13 +100,25 @@ public class NotificationsFacade {
         } else if (status != null) {
             page = notificationLogRepository.findByTenantIdAndStatus(tenantId, status, pageable);
         } else {
-            page = notificationLogRepository.findAll(pageable);
+            page = notificationLogRepository.findByTenantId(tenantId, pageable);
         }
         
-        return page.map(l -> new ro.ophthacloud.modules.notifications.dto.NotificationLogDto(
-                l.getId(), "Patient", l.getChannel().name(), l.getStatus().name(),
+        return page.map(l -> {
+            String patientName = "Pacient Necunoscut";
+            if (l.getPatientId() != null) {
+                try {
+                    patientName = jdbcTemplate.queryForObject(
+                        "SELECT first_name || ' ' || last_name FROM patients WHERE id = ?",
+                        String.class,
+                        l.getPatientId()
+                    );
+                } catch (Exception ignored) {}
+            }
+            return new ro.ophthacloud.modules.notifications.dto.NotificationLogDto(
+                l.getId(), patientName, l.getChannel().name(), l.getStatus().name(),
                 l.getRecipientAddress(), l.getSubject(), l.getBodyPreview(), l.getSentAt(), l.getExternalMessageId()
-        ));
+            );
+        });
     }
 
     // ── Recall Protocols ─────────────────────────────────────────────────────

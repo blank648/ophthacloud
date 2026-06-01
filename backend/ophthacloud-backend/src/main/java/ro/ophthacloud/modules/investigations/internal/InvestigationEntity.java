@@ -13,6 +13,8 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import ro.ophthacloud.infrastructure.persistence.TenantAwareEntity;
+import ro.ophthacloud.modules.investigations.InvestigationCategoryType;
+import ro.ophthacloud.modules.investigations.InvestigationStatusType;
 
 import java.time.Instant;
 import java.util.UUID;

@@ -25,7 +25,7 @@ public class ReportsController {
 
     @GetMapping("/dashboard-kpis")
     @Operation(summary = "Get dashboard KPIs", description = "Returns live metrics for the clinic dashboard (cached for 15m)")
-    @PreAuthorize("hasPermission('reports', 'MODULE', 'VIEW')")
+    @PreAuthorize("hasPermission('reports', 'MODULE', 'VIEW') or hasPermission('dashboard', 'MODULE', 'VIEW')")
     public ApiResponse<DashboardKpisDto> getDashboardKpis() {
         UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
         return ApiResponse.of(facade.getDashboardKpis(tenantId));

@@ -107,9 +107,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleUnexpected(Exception ex, HttpServletRequest req) {
-        log.error("Unexpected error on {} [requestId={}]", req.getRequestURI(), requestId(req), ex);
-        return ErrorResponse.of("INTERNAL_ERROR", "An unexpected error occurred.",
-                req.getRequestURI(), requestId(req));
+        log.error("Unhandled exception on {}", req.getRequestURI(), ex);
+        return ErrorResponse.of("INTERNAL_ERROR", "An unexpected error occurred.", req.getRequestURI(), requestId(req));
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────

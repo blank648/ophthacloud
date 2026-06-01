@@ -72,14 +72,9 @@
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
-      "pkceCodeChallengeMethod": "S256",
       "redirectUris": [
         "http://localhost:3000/*",
         "https://app.ophthacloud.ro/*"
-      ],
-      "postLogoutRedirectUris": [
-        "http://localhost:3000/",
-        "https://app.ophthacloud.ro/"
       ],
       "webOrigins": ["+"],
       "defaultClientScopes": [
@@ -101,14 +96,9 @@
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
-      "pkceCodeChallengeMethod": "S256",
       "redirectUris": [
         "http://localhost:3001/*",
         "https://portal.ophthacloud.ro/*"
-      ],
-      "postLogoutRedirectUris": [
-        "http://localhost:3001/",
-        "https://portal.ophthacloud.ro/"
       ],
       "webOrigins": ["+"],
       "defaultClientScopes": [

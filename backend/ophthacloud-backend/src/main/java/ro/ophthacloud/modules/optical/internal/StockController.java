@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import ro.ophthacloud.modules.optical.dto.CreateStockItemRequest;
 import ro.ophthacloud.modules.optical.dto.StockItemDto;
 import ro.ophthacloud.modules.optical.dto.UpdateStockRequest;
 import ro.ophthacloud.shared.tenant.TenantContext;
@@ -42,5 +44,13 @@ public class StockController {
     @Operation(summary = "Update stock level for an item")
     public ApiResponse<StockItemDto> updateStockLevel(@PathVariable UUID id, @RequestBody @Valid UpdateStockRequest request) {
         return ApiResponse.of(stockService.updateStockLevel(TenantContext.require(), id, request.newStock()));
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasPermission('optical', 'MODULE', 'EDIT')")
+    @Operation(summary = "Create a new stock item")
+    public ApiResponse<StockItemDto> createStockItem(@RequestBody @Valid CreateStockItemRequest request) {
+        return ApiResponse.of(stockService.createItem(TenantContext.require(), request));
     }
 }

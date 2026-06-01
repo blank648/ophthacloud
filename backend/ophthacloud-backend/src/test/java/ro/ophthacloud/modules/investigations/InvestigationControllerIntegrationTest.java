@@ -12,8 +12,6 @@ import ro.ophthacloud.modules.investigations.dto.CreateInvestigationRequest;
 import ro.ophthacloud.modules.investigations.dto.InvestigationDto;
 import ro.ophthacloud.modules.investigations.dto.InvestigationFileDto;
 import ro.ophthacloud.modules.investigations.dto.UpdateInvestigationResultRequest;
-import ro.ophthacloud.modules.investigations.internal.InvestigationCategoryType;
-import ro.ophthacloud.modules.investigations.internal.InvestigationStatusType;
 import ro.ophthacloud.shared.api.ApiResponse;
 import ro.ophthacloud.shared.api.PagedApiResponse;
 import ro.ophthacloud.shared.test.BaseIntegrationTest;

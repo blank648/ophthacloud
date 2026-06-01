@@ -32,6 +32,9 @@ public interface AuditLogRepository extends JpaRepository<AuditLogEntity, UUID> 
     @Query("SELECT a FROM AuditLogEntity a WHERE a.tenantId = :tenantId ORDER BY a.createdAt DESC")
     Page<AuditLogEntity> findByTenantId(@Param("tenantId") UUID tenantId, Pageable pageable);
 
+    @Query("SELECT a FROM AuditLogEntity a WHERE a.tenantId = :tenantId AND a.action = :action ORDER BY a.createdAt DESC")
+    Page<AuditLogEntity> findByTenantIdAndAction(@Param("tenantId") UUID tenantId, @Param("action") String action, Pageable pageable);
+
     /**
      * Returns the full audit trail for a specific entity (e.g., a patient, a consultation).
      *

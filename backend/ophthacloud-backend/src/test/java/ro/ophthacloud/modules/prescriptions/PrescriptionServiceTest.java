@@ -20,7 +20,6 @@ import ro.ophthacloud.modules.prescriptions.dto.CreatePrescriptionRequest;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionDto;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineRequest;
 import ro.ophthacloud.modules.prescriptions.event.PrescriptionSignedEvent;
-import ro.ophthacloud.modules.prescriptions.enums.LensType;
 import ro.ophthacloud.modules.prescriptions.enums.PrescriptionStatusType;
 import ro.ophthacloud.modules.prescriptions.enums.PrescriptionType;
 import ro.ophthacloud.modules.prescriptions.internal.*;

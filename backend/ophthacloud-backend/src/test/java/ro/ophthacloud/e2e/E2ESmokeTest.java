@@ -1,6 +1,6 @@
 package ro.ophthacloud.e2e;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -8,7 +8,7 @@ import ro.ophthacloud.modules.appointments.dto.AppointmentRequest;
 import ro.ophthacloud.modules.emr.dto.CreateConsultationRequest;
 import ro.ophthacloud.modules.emr.dto.SaveSectionRequest;
 import ro.ophthacloud.modules.optical.dto.CreateOrderRequest;
-import ro.ophthacloud.modules.optical.internal.OrderType;
+import ro.ophthacloud.modules.optical.OrderType;
 import ro.ophthacloud.modules.patients.dto.CreatePatientRequest;
 import ro.ophthacloud.modules.prescriptions.dto.CreatePrescriptionRequest;
 import ro.ophthacloud.modules.prescriptions.dto.PrescriptionLineRequest;
@@ -51,8 +51,8 @@ public class E2ESmokeTest extends BaseIntegrationTest {
                 .body(JsonNode.class);
 
         assertThat(patientResp).isNotNull();
-        assertThat(patientResp.get("data").get("mrn").asText()).startsWith("OC-");
-        UUID patientId = UUID.fromString(patientResp.get("data").get("id").asText());
+        assertThat(patientResp.get("data").get("mrn").asString()).startsWith("OC-");
+        UUID patientId = UUID.fromString(patientResp.get("data").get("id").asString());
 
         // 3. Appointment -> POST /api/v1/appointments
         AppointmentRequest appointmentReq = AppointmentRequest.builder()
@@ -71,7 +71,7 @@ public class E2ESmokeTest extends BaseIntegrationTest {
                 .body(JsonNode.class);
 
         assertThat(apptResp).isNotNull();
-        UUID appointmentId = UUID.fromString(apptResp.get("data").get("id").asText());
+        UUID appointmentId = UUID.fromString(apptResp.get("data").get("id").asString());
 
         // 4. Consultation -> POST /api/v1/emr/consultations
         CreateConsultationRequest consultReq = new CreateConsultationRequest(
@@ -89,8 +89,8 @@ public class E2ESmokeTest extends BaseIntegrationTest {
                 .body(JsonNode.class);
 
         assertThat(consultResp).isNotNull();
-        assertThat(consultResp.get("data").get("status").asText()).isEqualTo("DRAFT");
-        UUID consultationId = UUID.fromString(consultResp.get("data").get("id").asText());
+        assertThat(consultResp.get("data").get("status").asString()).isEqualTo("DRAFT");
+        UUID consultationId = UUID.fromString(consultResp.get("data").get("id").asString());
 
         // 5. Section G -> PUT /api/v1/emr/consultations/{id}/sections/G
         SaveSectionRequest sectionReq = new SaveSectionRequest(
@@ -113,7 +113,7 @@ public class E2ESmokeTest extends BaseIntegrationTest {
                 .retrieve()
                 .body(JsonNode.class);
 
-        assertThat(signResp.get("data").get("status").asText()).isEqualTo("SIGNED");
+        assertThat(signResp.get("data").get("status").asString()).isEqualTo("SIGNED");
 
         // 7. Prescription -> POST /api/v1/prescriptions
         CreatePrescriptionRequest rxReq = CreatePrescriptionRequest.builder()
@@ -137,8 +137,8 @@ public class E2ESmokeTest extends BaseIntegrationTest {
                 .retrieve()
                 .body(JsonNode.class);
 
-        assertThat(rxResp.get("data").get("status").asText()).isEqualTo("ACTIVE");
-        UUID prescriptionId = UUID.fromString(rxResp.get("data").get("id").asText());
+        assertThat(rxResp.get("data").get("status").asString()).isEqualTo("ACTIVE");
+        UUID prescriptionId = UUID.fromString(rxResp.get("data").get("id").asString());
 
         // 8. Optical -> POST /api/v1/optical/orders
         CreateOrderRequest optReq = CreateOrderRequest.builder()
@@ -156,7 +156,7 @@ public class E2ESmokeTest extends BaseIntegrationTest {
                 .retrieve()
                 .body(JsonNode.class);
 
-        assertThat(optResp.get("data").get("stage").asText()).isEqualTo("RECEIVED");
+        assertThat(optResp.get("data").get("stage").asString()).isEqualTo("RECEIVED");
 
         // 9. PDF -> GET /api/v1/prescriptions/{id}/pdf
         JsonNode pdfResp = client.get().uri("/api/v1/prescriptions/{id}/pdf", prescriptionId)
@@ -164,7 +164,7 @@ public class E2ESmokeTest extends BaseIntegrationTest {
                 .retrieve()
                 .body(JsonNode.class);
 
-        assertThat(pdfResp.get("data").get("downloadUrl").asText()).isNotBlank();
+        assertThat(pdfResp.get("data").get("downloadUrl").asString()).isNotBlank();
 
         // 10. KPIs -> GET /api/v1/reports/dashboard-kpis
         JsonNode kpiResp = client.get().uri("/api/v1/reports/dashboard-kpis")
@@ -172,6 +172,6 @@ public class E2ESmokeTest extends BaseIntegrationTest {
                 .retrieve()
                 .body(JsonNode.class);
 
-        assertThat(kpiResp.get("data").get("todayAppointments").asInt()).isGreaterThanOrEqualTo(0);
+        assertThat(kpiResp.get("data").get("todayAppointments").get("count").asInt()).isGreaterThanOrEqualTo(0);
     }
 }

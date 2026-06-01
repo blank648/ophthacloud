@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import ro.ophthacloud.modules.optical.dto.*;
-import ro.ophthacloud.modules.optical.internal.OrderStage;
 import ro.ophthacloud.shared.test.BaseIntegrationTest;
 
 import java.math.BigDecimal;
@@ -37,7 +36,7 @@ class OpticalOrderControllerIntegrationTest extends BaseIntegrationTest {
     void createOrder_shouldSucceed() {
         UUID patientId = createPatient(TENANT_A);
         CreateOrderRequest request = new CreateOrderRequest(
-                patientId, null, null, ro.ophthacloud.modules.optical.internal.OrderType.GLASSES, new BigDecimal("50.00"), null
+                patientId, null, null, OrderType.GLASSES, new BigDecimal("50.00"), null
         );
 
         ResponseEntity<Map<String, Object>> response = client.post()
@@ -160,7 +159,7 @@ class OpticalOrderControllerIntegrationTest extends BaseIntegrationTest {
     private UUID createOrder(UUID tenantId) {
         UUID patientId = createPatient(tenantId);
         CreateOrderRequest request = new CreateOrderRequest(
-                patientId, null, null, ro.ophthacloud.modules.optical.internal.OrderType.GLASSES, BigDecimal.ZERO, null
+                patientId, null, null, OrderType.GLASSES, BigDecimal.ZERO, null
         );
         ResponseEntity<Map<String, Object>> response = client.post()
                 .uri("/api/v1/optical/orders")

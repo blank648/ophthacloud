@@ -1,18 +1,99 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/AppLayout';
-import { getPatientById, clinicalFlagStyles, prescriptionStatusStyles } from '@/data/demo-data';
+import { clinicalFlagStyles, prescriptionStatusStyles } from '@/data/demo-data';
 import { ClinicalFlagBadge } from '@/components/StatusBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, FileText, Shield, FolderOpen, ClipboardList, Check, X, AlertTriangle, Info, Lock, Download, Upload, Eye, ChevronDown, ChevronRight, Pill } from 'lucide-react';
+import { User, FileText, Shield, FolderOpen, ClipboardList, Check, X, AlertTriangle, Info, Lock, Download, Upload, Eye, ChevronDown, ChevronRight, Pill, Loader2, Edit, Save, Phone, MapPin } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Legend } from 'recharts';
+import { usePatient, useInvitePatientToPortal, useUpdatePatient } from '@/hooks/usePatients';
+import { useConsultations } from '@/hooks/useEmr';
+import { usePrescriptions } from '@/hooks/usePrescriptions';
+import { useForm } from 'react-hook-form';
+import { useAuditLogs } from '@/hooks/useAdmin';
+import { setServerErrors } from '@/lib/formUtils';
+import type { UpdatePatientRequest } from '@/types/patients';
+import { usePermissions } from '@/lib/permissions';
+import { toast } from 'sonner';
 
 const PatientProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const patient = getPatientById(id || '');
+  
+  const { data: realPatient, isLoading, isError } = usePatient(id);
+  const { data: consultationsPage } = useConsultations(id, { page: 0, size: 50 });
+  const { data: prescriptionsPage } = usePrescriptions(id, { page: 0, size: 50 });
+  const { data: auditLogsPage } = useAuditLogs({ entityType: 'PATIENT', entityId: id });
+  const inviteMutation = useInvitePatientToPortal();
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const { mutateAsync: updatePatient, isPending: isUpdating } = useUpdatePatient();
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission('patients', 'EDIT');
 
-  if (!patient) {
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+    reset
+  } = useForm<UpdatePatientRequest>();
+
+  React.useEffect(() => {
+    if (realPatient) {
+      reset({
+        firstName: realPatient.firstName,
+        lastName: realPatient.lastName,
+        dateOfBirth: realPatient.dateOfBirth,
+        gender: realPatient.gender,
+        phone: realPatient.phone || '',
+        email: realPatient.email || '',
+        cnp: realPatient.cnp || '',
+        address: realPatient.address || '',
+        city: realPatient.city || '',
+        county: realPatient.county || '',
+        bloodType: realPatient.bloodType || '',
+        insuranceProvider: realPatient.insuranceProvider || '',
+        insuranceNumber: realPatient.insuranceNumber || '',
+        occupation: realPatient.occupation || '',
+        emergencyContactName: realPatient.emergencyContactName || '',
+        emergencyContactPhone: realPatient.emergencyContactPhone || '',
+        notes: realPatient.notes || '',
+      });
+    }
+  }, [realPatient, reset]);
+
+  const onEditSubmit = async (data: UpdatePatientRequest) => {
+    try {
+      const sanitizedData = Object.fromEntries(
+        Object.entries(data).map(([key, value]) => [key, value === '' ? undefined : value])
+      ) as UpdatePatientRequest;
+
+      await updatePatient({ id: id || '', data: sanitizedData });
+      toast.success('Datele pacientului au fost actualizate cu succes!');
+      setIsEditing(false);
+    } catch (error) {
+      const handled = setServerErrors(error, setError);
+      if (handled) {
+        toast.error('Vă rugăm să corectați câmpurile evidențiate');
+      } else {
+        toast.error('A apărut o eroare la actualizarea pacientului');
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <AppLayout breadcrumbs={[{ label: 'Pacienți', path: '/patients' }, { label: 'Se încarcă...' }]}>
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+          <p className="text-clinical-sm text-muted-foreground">Se încarcă datele pacientului...</p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (isError || !realPatient) {
     return (
       <AppLayout breadcrumbs={[{ label: 'Pacienți', path: '/patients' }, { label: 'Necunoscut' }]}>
         <div className="flex flex-col items-center justify-center py-20">
@@ -24,6 +105,134 @@ const PatientProfilePage: React.FC = () => {
       </AppLayout>
     );
   }
+
+  const patient = {
+    ...realPatient,
+    name: `${realPatient.firstName} ${realPatient.lastName}`,
+    clinicalFlags: [],
+    status: realPatient.isActive ? 'active' : 'inactive',
+    dob: realPatient.dateOfBirth,
+    preferredLanguage: 'RO',
+    primaryDiagnosis: 'N/A',
+    icdCode: '',
+    lastVisit: 'N/A',
+    gender: realPatient.gender === 'MALE' ? 'M' : 'F',
+    cnp: realPatient.cnp || '',
+    phone: realPatient.phone || '',
+    address: realPatient.address || '',
+    email: realPatient.email || '',
+    age: realPatient.age || 0,
+    consultations: (Array.isArray(consultationsPage?.data)
+      ? consultationsPage.data
+      : (consultationsPage?.data as any)?.content || []).map((c: any) => ({
+      id: c.id,
+      signed: c.status === 'SIGNED',
+      date: c.consultationDate ? new Date(c.consultationDate).toLocaleDateString('ro-RO') : 'N/A',
+      doctorName: c.doctorName,
+      duration: 15,
+      diagnosis: c.chiefComplaint || 'Consultație oftalmologică',
+      icdCode: c.status === 'SIGNED' ? 'Finalizată' : 'Ciornă',
+      summary: c.status === 'SIGNED'
+        ? `Consultație finalizată și semnată digital pe data de ${c.signedAt ? new Date(c.signedAt).toLocaleDateString('ro-RO') : 'N/A'}.`
+        : 'Consultație în curs de desfășurare.',
+      followUpDate: null
+    })),
+    prescriptions: (Array.isArray(prescriptionsPage?.data)
+      ? prescriptionsPage.data
+      : (prescriptionsPage?.data as any)?.content || []).map((rx: any) => {
+      const odLine = rx.lines?.find((l: any) => l.eye === 'OD');
+      const osLine = rx.lines?.find((l: any) => l.eye === 'OS');
+      return {
+        id: rx.id,
+        date: rx.createdAt ? new Date(rx.createdAt).toLocaleDateString('ro-RO') : 'N/A',
+        status: rx.status ? rx.status.toLowerCase() : 'active',
+        od: {
+          sph: odLine?.sph || 0,
+          cyl: odLine?.cyl || 0,
+          axis: odLine?.axis || 0,
+          add: odLine?.addPower || null,
+        },
+        os: {
+          sph: osLine?.sph || 0,
+          cyl: osLine?.cyl || 0,
+          axis: osLine?.axis || 0,
+          add: osLine?.addPower || null,
+        }
+      };
+    }),
+    emergencyContact: realPatient.emergencyContactName ? {
+       name: realPatient.emergencyContactName,
+       relationship: 'N/A',
+       phone: realPatient.emergencyContactPhone
+    } : null,
+    medicalHistory: realPatient.medicalHistory || {
+      systemicComorbidities: {},
+      familyHistory: {},
+      ophthalmicHistory: { conditions: [], surgeries: [] },
+      medications: []
+    },
+    consents: [
+      {
+        id: '1',
+        name: 'Acord GDPR (Prelucrarea Datelor)',
+        description: 'Acord obligatoriu conform Regulamentului UE 2016/679 pentru prelucrarea datelor cu caracter personal și a istoricului medical în scop terapeutic.',
+        mandatory: true,
+        granted: true,
+        dateSigned: realPatient.createdAt ? new Date(realPatient.createdAt).toLocaleDateString('ro-RO') : new Date().toLocaleDateString('ro-RO')
+      },
+      {
+        id: '2',
+        name: 'Acord Comunicări (SMS/Email)',
+        description: 'Consimțământ pentru primirea notificărilor de reamintire a programărilor, alertelor de recall și a rețetelor în format electronic.',
+        mandatory: false,
+        granted: realPatient.hasPortalAccess || false,
+        dateSigned: realPatient.portalInvitedAt ? new Date(realPatient.portalInvitedAt).toLocaleDateString('ro-RO') : null
+      },
+      {
+        id: '3',
+        name: 'Consimțământ Dilatație Pupilară',
+        description: 'Acord pentru administrarea picăturilor midriatice în scopul examinării fundului de ochi și determinării refracției ciclopegice.',
+        mandatory: false,
+        granted: true,
+        dateSigned: realPatient.createdAt ? new Date(realPatient.createdAt).toLocaleDateString('ro-RO') : new Date().toLocaleDateString('ro-RO')
+      }
+    ],
+    accessLogs: (Array.isArray(auditLogsPage?.data)
+      ? auditLogsPage.data
+      : (auditLogsPage?.data as any)?.content || []).map((log: any) => {
+      const formatAuditRole = (r: string) => {
+        switch (r?.toUpperCase()) {
+          case 'SUPER_ADMIN': return 'Administrator';
+          case 'CLINIC_ADMIN': return 'Manager Clinică';
+          case 'DOCTOR': return 'Medic Oftalmolog';
+          case 'RECEPTIONIST': return 'Recepție';
+          case 'OPTOMETRIST': return 'Optometrist';
+          case 'NURSE': return 'Asistent';
+          case 'OPTICAL_TECHNICIAN': return 'Tehnician Optică';
+          case 'MANAGER': return 'Manager';
+          case 'PATIENT': return 'Pacient';
+          case 'SYSTEM': return 'Sistem';
+          default: return r || 'Utilizator';
+        }
+      };
+      const formatAction = (act: string) => {
+        switch (act?.toUpperCase()) {
+          case 'CREATE': return 'Creare dosar';
+          case 'UPDATE': return 'Actualizare date';
+          case 'VIEW': return 'Vizualizare dosar';
+          case 'DELETE': return 'Ștergere date';
+          default: return act;
+        }
+      };
+      return {
+        date: log.occurredAt ? new Date(log.occurredAt).toLocaleString('ro-RO') : 'N/A',
+        user: log.actorName || log.actorId,
+        role: formatAuditRole(log.actorRole),
+        action: formatAction(log.action),
+        ip: log.ipAddress || '—'
+      };
+    })
+  };
 
   const iopChartData = patient.consultations?.map(c => {
     const iopMatch = c.summary.match(/IOP OD:\s*(\d+).*OS:\s*(\d+)/);
@@ -54,8 +263,58 @@ const PatientProfilePage: React.FC = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <button className="px-3 py-2 rounded-lg border border-border text-clinical-sm font-medium hover:bg-muted transition-colors">Programare</button>
-            <button className="px-3 py-2 rounded-lg bg-primary text-white text-clinical-sm font-semibold hover:opacity-90 transition-colors">Deschide EMR</button>
+            {realPatient?.portalInvitedAt ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-clinical-sm font-semibold text-green-700 select-none">
+                <Check className="w-4 h-4" /> Invitat în Portal
+              </span>
+            ) : (
+              <button
+                disabled={inviteMutation.isPending || !realPatient?.email}
+                onClick={async () => {
+                  try {
+                    await inviteMutation.mutateAsync(patient.id);
+                    toast.success('Invitație trimisă cu succes!', {
+                      description: `Pacientul a fost invitat în portal la adresa ${patient.email}.`
+                    });
+                  } catch (err: any) {
+                    toast.error('Eroare la trimiterea invitației', {
+                      description: err.message || 'Verificați conexiunea cu serverul.'
+                    });
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary text-clinical-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                title={!realPatient?.email ? "Pacientul trebuie să aibă o adresă de email validă." : "Trimite invitație cont portal"}
+              >
+                {inviteMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Shield className="w-4 h-4" />
+                )}
+                Invită în Portal
+              </button>
+            )}
+
+            {canEdit && (
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-clinical-sm font-semibold hover:bg-muted transition-colors"
+              >
+                <Edit className="w-4 h-4 text-primary" /> Editează Pacient
+              </button>
+            )}
+
+            <button 
+              onClick={() => navigate(`/appointments?patientId=${patient.id}&openBooking=true`)}
+              className="px-3 py-2 rounded-lg border border-border text-clinical-sm font-medium hover:bg-muted transition-colors"
+            >
+              Programare
+            </button>
+            <button 
+              onClick={() => navigate(`/consultation?patientId=${patient.id}`)}
+              className="px-3 py-2 rounded-lg bg-primary text-white text-clinical-sm font-semibold hover:opacity-90 transition-colors"
+            >
+              Deschide EMR
+            </button>
           </div>
         </div>
         {/* Age-based banners */}
@@ -163,6 +422,186 @@ const PatientProfilePage: React.FC = () => {
           <ConsultationHistoryTab patient={patient} iopChartData={iopChartData} />
         </TabsContent>
       </Tabs>
+
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-card z-10">
+              <div>
+                <h2 className="text-clinical-lg font-bold text-foreground flex items-center gap-2">
+                  <Edit className="w-5 h-5 text-primary" /> Editează Date Pacient
+                </h2>
+                <p className="text-clinical-xs text-muted-foreground">
+                  Cod dosar: <span className="font-clinical">{patient.mrn}</span>
+                </p>
+              </div>
+              <button 
+                onClick={() => setIsEditing(false)}
+                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+                title="Închide"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSubmit(onEditSubmit)} className="p-6 space-y-6 flex-1">
+              {/* Date personale */}
+              <section className="bg-muted/10 rounded-xl border border-border p-5">
+                <h3 className="text-clinical-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+                  <User className="w-3.5 h-3.5 text-primary" /> Date personale
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Prenume *</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('firstName', { required: 'Prenumele este obligatoriu' })} disabled={isUpdating} />
+                    {errors.firstName && <p className="text-clinical-xs text-destructive mt-1">{errors.firstName.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Nume *</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('lastName', { required: 'Numele este obligatoriu' })} disabled={isUpdating} />
+                    {errors.lastName && <p className="text-clinical-xs text-destructive mt-1">{errors.lastName.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">CNP</label>
+                    <input
+                      maxLength={13}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50 font-clinical"
+                      {...register('cnp')}
+                      disabled={isUpdating}
+                    />
+                    {errors.cnp && <p className="text-clinical-xs text-destructive mt-1">{errors.cnp.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Data nașterii *</label>
+                    <input type="date" className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('dateOfBirth', {
+                      required: 'Data nașterii este obligatorie',
+                      validate: val => new Date(val!) <= new Date() || 'Data nașterii nu poate fi în viitor'
+                    })} disabled={isUpdating} />
+                    {errors.dateOfBirth && <p className="text-clinical-xs text-destructive mt-1">{errors.dateOfBirth.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Sex</label>
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('gender')} disabled={isUpdating}>
+                      <option value="MALE">Masculin</option>
+                      <option value="FEMALE">Feminin</option>
+                      <option value="UNKNOWN">Necunoscut</option>
+                    </select>
+                    {errors.gender && <p className="text-clinical-xs text-destructive mt-1">{errors.gender.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Grupă sanguină</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('bloodType')} placeholder="A+, B-, etc." disabled={isUpdating} />
+                    {errors.bloodType && <p className="text-clinical-xs text-destructive mt-1">{errors.bloodType.message}</p>}
+                  </div>
+                </div>
+              </section>
+
+              {/* Contact */}
+              <section className="bg-muted/10 rounded-xl border border-border p-5">
+                <h3 className="text-clinical-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-primary" /> Contact & Adresă
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Telefon</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('phone', {
+                      pattern: { value: /^[+0-9() -]{10,15}$/, message: 'Număr de telefon invalid' }
+                    })} placeholder="07XX XXX XXX" disabled={isUpdating} />
+                    {errors.phone && <p className="text-clinical-xs text-destructive mt-1">{errors.phone.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Email</label>
+                    <input type="email" className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('email')} disabled={isUpdating} />
+                    {errors.email && <p className="text-clinical-xs text-destructive mt-1">{errors.email.message}</p>}
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">
+                      <MapPin className="inline w-3 h-3 mr-1" /> Stradă și număr
+                    </label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('address')} disabled={isUpdating} />
+                    {errors.address && <p className="text-clinical-xs text-destructive mt-1">{errors.address.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Oraș</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('city')} disabled={isUpdating} />
+                    {errors.city && <p className="text-clinical-xs text-destructive mt-1">{errors.city.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Județ</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('county')} disabled={isUpdating} />
+                    {errors.county && <p className="text-clinical-xs text-destructive mt-1">{errors.county.message}</p>}
+                  </div>
+                </div>
+              </section>
+
+              {/* Administrative & Urgență */}
+              <section className="bg-muted/10 rounded-xl border border-border p-5">
+                <h3 className="text-clinical-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+                  <ClipboardList className="w-3.5 h-3.5 text-primary" /> Administrativ & Urgență
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Casă Asigurări</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('insuranceProvider')} placeholder="CASMB, etc." disabled={isUpdating} />
+                    {errors.insuranceProvider && <p className="text-clinical-xs text-destructive mt-1">{errors.insuranceProvider.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Număr Asigurare</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('insuranceNumber')} disabled={isUpdating} />
+                    {errors.insuranceNumber && <p className="text-clinical-xs text-destructive mt-1">{errors.insuranceNumber.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Ocupație</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('occupation')} disabled={isUpdating} />
+                    {errors.occupation && <p className="text-clinical-xs text-destructive mt-1">{errors.occupation.message}</p>}
+                  </div>
+                  
+                  <div className="col-span-1 md:col-span-3 mt-2 border-t border-border pt-4">
+                    <label className="block text-clinical-sm font-semibold text-foreground mb-3">Contact de urgență</label>
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Nume contact</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('emergencyContactName')} disabled={isUpdating} />
+                    {errors.emergencyContactName && <p className="text-clinical-xs text-destructive mt-1">{errors.emergencyContactName.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Telefon contact</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('emergencyContactPhone')} disabled={isUpdating} />
+                    {errors.emergencyContactPhone && <p className="text-clinical-xs text-destructive mt-1">{errors.emergencyContactPhone.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-clinical-xs font-medium text-muted-foreground mb-1.5">Note / Diverse</label>
+                    <input className="w-full h-10 rounded-md border border-input bg-background px-3 text-clinical-sm focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-colors disabled:opacity-50" {...register('notes')} disabled={isUpdating} />
+                    {errors.notes && <p className="text-clinical-xs text-destructive mt-1">{errors.notes.message}</p>}
+                  </div>
+                </div>
+              </section>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border sticky bottom-0 bg-card z-10">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 rounded-lg border border-border text-clinical-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50"
+                  disabled={isUpdating}
+                >
+                  Anulează
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-white text-clinical-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50"
+                >
+                  {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
+                  Salvează Modificări
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 };
@@ -186,64 +625,69 @@ const MedicalHistoryTab: React.FC<{ patient: any }> = ({ patient }) => {
   const mh = patient.medicalHistory;
   if (!mh) return <p className="text-muted-foreground p-4">Nu există date de istoric medical.</p>;
 
+  const sys = mh.systemicComorbidities || {};
+  const fam = mh.familyHistory || {};
+  const oph = mh.ophthalmicHistory || { conditions: [], surgeries: [] };
+  const meds = mh.medications || [];
+
   return (
     <div>
       {/* Diabetes banner */}
-      {mh.systemicComorbidities.diabetes && (
+      {sys.diabetes && (
         <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 border-l-4 border-l-amber-500 text-clinical-sm text-amber-800 flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 shrink-0" /> ⚠ Screening retinopatie diabetică anual recomandat — Diabet tip {mh.systemicComorbidities.diabetes.type}, HbA1c: {mh.systemicComorbidities.diabetes.hba1c}%
+          <AlertTriangle className="w-4 h-4 shrink-0" /> ⚠ Screening retinopatie diabetică anual recomandat — Diabet tip {sys.diabetes.type}, HbA1c: {sys.diabetes.hba1c}%
         </div>
       )}
       {/* Glaucoma family banner */}
-      {mh.familyHistory.glaucoma && (
+      {fam.glaucoma && (
         <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 border-l-4 border-l-blue-500 text-clinical-sm text-blue-800 flex items-center gap-2">
-          <Info className="w-4 h-4 shrink-0" /> ℹ Risc genetic crescut glaucom — {mh.familyHistory.glaucoma.relative} diagnosticat la {mh.familyHistory.glaucoma.ageAtDiagnosis} ani — screening IOP anual
+          <Info className="w-4 h-4 shrink-0" /> ℹ Risc genetic crescut glaucom — {fam.glaucoma.relative} diagnosticat la {fam.glaucoma.ageAtDiagnosis} ani — screening IOP anual
         </div>
       )}
 
       <AccordionSection title="Antecedente oftalmologice personale" defaultOpen>
         <div className="grid grid-cols-2 gap-4 text-clinical-sm">
-          <div><span className="text-muted-foreground">Prima vizită:</span> {mh.ophthalmicHistory.firstVisitAge} ani — {mh.ophthalmicHistory.firstVisitReason}</div>
-          <div><span className="text-muted-foreground">Ochelari:</span> {mh.ophthalmicHistory.glassesUse ? 'Da' : 'Nu'} · Lentile contact: {mh.ophthalmicHistory.contactLensUse ? 'Da' : 'Nu'}</div>
-          {mh.ophthalmicHistory.conditions.length > 0 && (
-            <div className="col-span-2"><span className="text-muted-foreground">Condiții:</span> {mh.ophthalmicHistory.conditions.join(', ')}</div>
+          <div><span className="text-muted-foreground">Prima vizită:</span> {oph.firstVisitAge || '-'} ani — {oph.firstVisitReason || '-'}</div>
+          <div><span className="text-muted-foreground">Ochelari:</span> {oph.glassesUse ? 'Da' : 'Nu'} · Lentile contact: {oph.contactLensUse ? 'Da' : 'Nu'}</div>
+          {oph.conditions?.length > 0 && (
+            <div className="col-span-2"><span className="text-muted-foreground">Condiții:</span> {oph.conditions.join(', ')}</div>
           )}
-          {mh.ophthalmicHistory.surgeries.length > 0 && (
-            <div className="col-span-2"><span className="text-muted-foreground">Intervenții:</span> {mh.ophthalmicHistory.surgeries.map((s: any) => `${s.type} (${s.year})`).join(', ')}</div>
+          {oph.surgeries?.length > 0 && (
+            <div className="col-span-2"><span className="text-muted-foreground">Intervenții:</span> {oph.surgeries.map((s: any) => `${s.type} (${s.year})`).join(', ')}</div>
           )}
-          {mh.ophthalmicHistory.ocularAllergies && <div><span className="text-muted-foreground">Alergii oculare:</span> {mh.ophthalmicHistory.ocularAllergies}</div>}
+          {oph.ocularAllergies && <div><span className="text-muted-foreground">Alergii oculare:</span> {oph.ocularAllergies}</div>}
         </div>
       </AccordionSection>
 
       <AccordionSection title="Comorbidități sistemice">
         <div className="grid grid-cols-2 gap-3 text-clinical-sm">
           <div className="flex items-center gap-2">
-            {mh.systemicComorbidities.diabetes ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
-            Diabet zaharat {mh.systemicComorbidities.diabetes ? `tip ${mh.systemicComorbidities.diabetes.type} (${mh.systemicComorbidities.diabetes.durationYears} ani)` : ''}
+            {sys.diabetes ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
+            Diabet zaharat {sys.diabetes ? `tip ${sys.diabetes.type} (${sys.diabetes.durationYears} ani)` : ''}
           </div>
           <div className="flex items-center gap-2">
-            {mh.systemicComorbidities.hypertension ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
-            Hipertensiune arterială {mh.systemicComorbidities.hypertensionMed ? `(${mh.systemicComorbidities.hypertensionMed})` : ''}
+            {sys.hypertension ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
+            Hipertensiune arterială {sys.hypertensionMed ? `(${sys.hypertensionMed})` : ''}
           </div>
           <div className="flex items-center gap-2">
-            {mh.systemicComorbidities.hyperlipidemia ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
+            {sys.hyperlipidemia ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
             Hiperlipidemie
           </div>
           <div className="flex items-center gap-2">
-            {mh.systemicComorbidities.migraineWithAura ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
+            {sys.migraineWithAura ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
             Migrenă cu aură
           </div>
           <div className="flex items-center gap-2">
-            {mh.systemicComorbidities.osteoporosis ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
+            {sys.osteoporosis ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
             Osteoporoză
           </div>
         </div>
       </AccordionSection>
 
       <AccordionSection title="Medicație sistemică în curs">
-        {mh.medications.length === 0 ? <p className="text-clinical-sm text-muted-foreground">Fără medicație sistemică.</p> : (
+        {meds.length === 0 ? <p className="text-clinical-sm text-muted-foreground">Fără medicație sistemică.</p> : (
           <div className="space-y-2">
-            {mh.medications.map((med: any, i: number) => (
+            {meds.map((med: any, i: number) => (
               <div key={i} className="flex items-center gap-3 p-2 rounded-md bg-muted/30">
                 <Pill className="w-4 h-4 text-primary" />
                 <span className="text-clinical-sm font-semibold">{med.name}</span>
@@ -258,12 +702,12 @@ const MedicalHistoryTab: React.FC<{ patient: any }> = ({ patient }) => {
       <AccordionSection title="Istoric familial oftalmologic">
         <div className="grid grid-cols-2 gap-3 text-clinical-sm">
           <div className="flex items-center gap-2">
-            {mh.familyHistory.glaucoma ? <Check className="w-4 h-4 text-red-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
-            Glaucom {mh.familyHistory.glaucoma ? `— ${mh.familyHistory.glaucoma.relative} (la ${mh.familyHistory.glaucoma.ageAtDiagnosis} ani)` : ''}
+            {fam.glaucoma ? <Check className="w-4 h-4 text-red-600" /> : <X className="w-4 h-4 text-muted-foreground" />}
+            Glaucom {fam.glaucoma ? `— ${fam.glaucoma.relative} (la ${fam.glaucoma.ageAtDiagnosis} ani)` : ''}
           </div>
-          <div className="flex items-center gap-2">{mh.familyHistory.amd ? <Check className="w-4 h-4 text-purple-600" /> : <X className="w-4 h-4 text-muted-foreground" />} AMD</div>
-          <div className="flex items-center gap-2">{mh.familyHistory.diabeticRetinopathy ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />} Retinopatie diabetică</div>
-          <div className="flex items-center gap-2">{mh.familyHistory.strabismus ? <Check className="w-4 h-4 text-blue-600" /> : <X className="w-4 h-4 text-muted-foreground" />} Strabism / Ambliopie</div>
+          <div className="flex items-center gap-2">{fam.amd ? <Check className="w-4 h-4 text-purple-600" /> : <X className="w-4 h-4 text-muted-foreground" />} AMD</div>
+          <div className="flex items-center gap-2">{fam.diabeticRetinopathy ? <Check className="w-4 h-4 text-amber-600" /> : <X className="w-4 h-4 text-muted-foreground" />} Retinopatie diabetică</div>
+          <div className="flex items-center gap-2">{fam.strabismus ? <Check className="w-4 h-4 text-blue-600" /> : <X className="w-4 h-4 text-muted-foreground" />} Strabism / Ambliopie</div>
         </div>
       </AccordionSection>
     </div>
@@ -320,11 +764,7 @@ const ConsentTab: React.FC<{ patient: any }> = ({ patient }) => {
             <th className="text-left text-clinical-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-4">IP</th>
           </tr></thead>
           <tbody>
-            {[
-              { date: '29.03.2026 08:32', user: 'Dr. Alexandru Popescu', role: 'Doctor', action: 'Vizualizare dosar', ip: '192.168.1.***' },
-              { date: '15.01.2026 09:10', user: 'Dr. Alexandru Popescu', role: 'Doctor', action: 'Editare consultație', ip: '192.168.1.***' },
-              { date: '10.10.2025 14:20', user: 'Ana Recepție', role: 'Recepție', action: 'Vizualizare programări', ip: '192.168.1.***' },
-            ].map((entry, i) => (
+            {(patient.accessLogs || []).map((entry: any, i: number) => (
               <tr key={i} className={`border-b border-border hover:bg-primary-50 transition-colors ${i % 2 ? 'bg-muted/30' : ''}`}>
                 <td className="py-2.5 px-4 text-clinical-xs font-clinical">{entry.date}</td>
                 <td className="py-2.5 px-4 text-clinical-sm">{entry.user}</td>

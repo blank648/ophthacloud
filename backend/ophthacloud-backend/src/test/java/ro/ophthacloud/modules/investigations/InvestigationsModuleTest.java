@@ -10,7 +10,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import ro.ophthacloud.OphthacloudBackendApplication;
 import ro.ophthacloud.modules.investigations.event.InvestigationResultAvailableEvent;
-import ro.ophthacloud.modules.investigations.internal.InvestigationCategoryType;
 
 import java.time.Instant;
 import java.util.UUID;

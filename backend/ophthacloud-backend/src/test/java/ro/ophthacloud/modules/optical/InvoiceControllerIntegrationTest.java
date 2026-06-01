@@ -35,7 +35,7 @@ class InvoiceControllerIntegrationTest extends BaseIntegrationTest {
         UUID patientId = createPatient(TENANT_A);
         UUID orderId = createOrder(TENANT_A, patientId);
 
-        CreateInvoiceRequest request = new CreateInvoiceRequest(orderId, patientId);
+        CreateInvoiceRequest request = new CreateInvoiceRequest(orderId, patientId, null);
 
         ResponseEntity<Map<String, Object>> response = client.post()
                 .uri("/api/v1/optical/invoices")

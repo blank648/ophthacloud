@@ -135,6 +135,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",          // Next.js dev
                 "http://localhost:3001",          // Patient portal dev
+                "http://localhost:5173",          // Vite React dev
+                "http://localhost:8083",          // Playwright baseURL config
                 "https://app.ophthacloud.ro",     // Production frontend
                 "https://portal.ophthacloud.ro"  // Production portal
         ));

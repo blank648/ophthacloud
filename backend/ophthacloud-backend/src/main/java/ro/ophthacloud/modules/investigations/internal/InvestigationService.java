@@ -12,6 +12,8 @@ import ro.ophthacloud.modules.investigations.dto.InvestigationDto;
 import ro.ophthacloud.modules.investigations.dto.InvestigationFileDto;
 import ro.ophthacloud.modules.investigations.dto.UpdateInvestigationResultRequest;
 import ro.ophthacloud.modules.investigations.event.InvestigationResultAvailableEvent;
+import ro.ophthacloud.modules.investigations.InvestigationCategoryType;
+import ro.ophthacloud.modules.investigations.InvestigationStatusType;
 
 import java.io.InputStream;
 import java.time.Instant;
@@ -75,7 +77,14 @@ public class InvestigationService {
         
         entity.setStatus(request.getStatus());
         entity.setPerformedAt(request.getPerformedAt());
-        entity.setResultData(request.getResultData() != null ? request.getResultData().toString() : null);
+        String jsonResult = null;
+        if (request.getResultData() != null) {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                jsonResult = mapper.writeValueAsString(request.getResultData());
+            } catch (Exception e) {}
+        }
+        entity.setResultData(jsonResult);
         entity.setInterpretation(request.getInterpretation());
         
         InvestigationEntity updated = investigationRepository.save(entity);
@@ -151,10 +160,10 @@ public class InvestigationService {
 
     private InvestigationDto mapToDto(InvestigationEntity entity) {
         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-        com.fasterxml.jackson.databind.JsonNode resultDataNode = null;
+        java.util.Map<String, Object> resultDataNode = null;
         if (entity.getResultData() != null && !entity.getResultData().isEmpty()) {
             try {
-                resultDataNode = mapper.readTree(entity.getResultData());
+                resultDataNode = mapper.readValue(entity.getResultData(), new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>() {});
             } catch (Exception ignored) {
             }
         }

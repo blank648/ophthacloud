@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import ro.ophthacloud.modules.optical.internal.OrderType;
+import ro.ophthacloud.modules.optical.OrderType;
 
 import java.math.BigDecimal;
 import java.util.UUID;

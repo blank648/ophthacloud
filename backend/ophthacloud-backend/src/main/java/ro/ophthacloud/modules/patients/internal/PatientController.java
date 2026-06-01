@@ -39,7 +39,7 @@ public class PatientController {
     private final PatientManagementFacade patientManagementFacade;
 
     @GetMapping
-    @PreAuthorize("hasPermission('patients', 'MODULE', 'VIEW')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CLINIC_ADMIN', 'DOCTOR', 'RECEPTIONIST', 'OPTOMETRIST', 'NURSE', 'OPTICAL_TECHNICIAN', 'MANAGER')")
     @Operation(summary = "List and search patients")
     public PagedApiResponse<PatientSummaryDto> listPatients(
             @RequestParam(required = false) String q,
@@ -60,7 +60,7 @@ public class PatientController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasPermission('patients', 'MODULE', 'VIEW')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CLINIC_ADMIN', 'DOCTOR', 'RECEPTIONIST', 'OPTOMETRIST', 'NURSE', 'OPTICAL_TECHNICIAN', 'MANAGER')")
     @Operation(summary = "Get patient details by ID")
     public ApiResponse<PatientDto> getPatient(@PathVariable UUID id) {
         log.debug("REST request to get patient: {}", id);

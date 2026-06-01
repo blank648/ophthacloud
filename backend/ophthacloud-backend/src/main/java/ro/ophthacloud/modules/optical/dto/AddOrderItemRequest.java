@@ -15,6 +15,7 @@ public record AddOrderItemRequest(
     @Min(1)
     int quantity,
     @NotNull
+    @jakarta.validation.constraints.DecimalMin(value = "0.01")
     BigDecimal unitPrice,
     BigDecimal discountPercent,
     String eye,

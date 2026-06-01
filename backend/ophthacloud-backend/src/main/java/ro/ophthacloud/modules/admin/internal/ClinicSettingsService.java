@@ -2,6 +2,7 @@ package ro.ophthacloud.modules.admin.internal;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ro.ophthacloud.modules.admin.dto.ClinicSettingsDto;
@@ -9,6 +10,7 @@ import ro.ophthacloud.modules.admin.dto.UpdateClinicSettingsRequest;
 import ro.ophthacloud.shared.tenant.TenantContext;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,13 +31,34 @@ public class ClinicSettingsService {
     );
 
     private final ClinicSettingsRepository clinicSettingsRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Transactional(readOnly = true)
     public ClinicSettingsDto getClinicSettings() {
         UUID tenantId = TenantContext.require();
         ClinicSettingsEntity entity = clinicSettingsRepository.findByTenantId(tenantId)
                 .orElseThrow(() -> new IllegalStateException("Clinic settings not found for tenant " + tenantId));
-        return ClinicSettingsDto.from(entity);
+        
+        String name = "Clinica Oftalmologică Demo SRL";
+        String cui = "";
+        String phone = "";
+        String email = "";
+        String address = "";
+        try {
+            Map<String, Object> tenant = jdbcTemplate.queryForMap(
+                    "SELECT name, cui, phone, email, address FROM tenants WHERE id = ?",
+                    tenantId
+            );
+            if (tenant.get("name") != null) name = (String) tenant.get("name");
+            if (tenant.get("cui") != null) cui = (String) tenant.get("cui");
+            if (tenant.get("phone") != null) phone = (String) tenant.get("phone");
+            if (tenant.get("email") != null) email = (String) tenant.get("email");
+            if (tenant.get("address") != null) address = (String) tenant.get("address");
+        } catch (Exception e) {
+            log.warn("Could not fetch tenant details for tenant {}", tenantId, e);
+        }
+
+        return ClinicSettingsDto.from(entity, name, cui, phone, email, address);
     }
 
     @Transactional
@@ -75,10 +98,55 @@ public class ClinicSettingsService {
         if (request.prescriptionPrefix() != null) {
             entity.setPrescriptionPrefix(request.prescriptionPrefix());
         }
+        if (request.quietHoursStart() != null) {
+            entity.setQuietHoursStart(request.quietHoursStart());
+        }
+        if (request.quietHoursEnd() != null) {
+            entity.setQuietHoursEnd(request.quietHoursEnd());
+        }
+        if (request.maxSmsPerPatient() != null) {
+            entity.setMaxSmsPerPatient(request.maxSmsPerPatient());
+        }
 
         entity = clinicSettingsRepository.save(entity);
+
+        if (request.name() != null) {
+            jdbcTemplate.update("UPDATE tenants SET name = ? WHERE id = ?", request.name(), tenantId);
+        }
+        if (request.cui() != null) {
+            jdbcTemplate.update("UPDATE tenants SET cui = ? WHERE id = ?", request.cui(), tenantId);
+        }
+        if (request.phone() != null) {
+            jdbcTemplate.update("UPDATE tenants SET phone = ? WHERE id = ?", request.phone(), tenantId);
+        }
+        if (request.email() != null) {
+            jdbcTemplate.update("UPDATE tenants SET email = ? WHERE id = ?", request.email(), tenantId);
+        }
+        if (request.address() != null) {
+            jdbcTemplate.update("UPDATE tenants SET address = ? WHERE id = ?", request.address(), tenantId);
+        }
+
+        String name = "Clinica Oftalmologică Demo SRL";
+        String cui = "";
+        String phone = "";
+        String email = "";
+        String address = "";
+        try {
+            Map<String, Object> tenant = jdbcTemplate.queryForMap(
+                    "SELECT name, cui, phone, email, address FROM tenants WHERE id = ?",
+                    tenantId
+            );
+            if (tenant.get("name") != null) name = (String) tenant.get("name");
+            if (tenant.get("cui") != null) cui = (String) tenant.get("cui");
+            if (tenant.get("phone") != null) phone = (String) tenant.get("phone");
+            if (tenant.get("email") != null) email = (String) tenant.get("email");
+            if (tenant.get("address") != null) address = (String) tenant.get("address");
+        } catch (Exception e) {
+            log.warn("Could not fetch tenant details after update for tenant {}", tenantId, e);
+        }
+
         log.info("Updated clinic settings for tenant {}", tenantId);
-        return ClinicSettingsDto.from(entity);
+        return ClinicSettingsDto.from(entity, name, cui, phone, email, address);
     }
 
     /**

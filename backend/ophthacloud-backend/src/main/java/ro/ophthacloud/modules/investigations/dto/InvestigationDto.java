@@ -1,12 +1,12 @@
 package ro.ophthacloud.modules.investigations.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ro.ophthacloud.modules.investigations.internal.InvestigationCategoryType;
-import ro.ophthacloud.modules.investigations.internal.InvestigationStatusType;
+import ro.ophthacloud.modules.investigations.InvestigationCategoryType;
+import ro.ophthacloud.modules.investigations.InvestigationStatusType;
 
 import java.time.Instant;
 import java.util.List;
@@ -28,7 +28,7 @@ public class InvestigationDto {
     private InvestigationStatusType status;
     private Instant orderedAt;
     private Instant performedAt;
-    private JsonNode resultData;
+    private Map<String, Object> resultData;
     private String interpretation;
     private Boolean isUrgent;
     private String notes;

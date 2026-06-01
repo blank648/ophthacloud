@@ -330,7 +330,7 @@ public class KpiQueryRepository {
                 diag->>'icd10_name' as name, 
                 COUNT(*) as cnt
             FROM patient_medical_history pmh,
-                 jsonb_array_elements(pmh.active_diagnoses) diag
+                 jsonb_array_elements(COALESCE(pmh.active_diagnoses, '[]'::jsonb)) diag
             WHERE pmh.tenant_id = ?
             GROUP BY code, name
             ORDER BY cnt DESC

@@ -1,11 +1,11 @@
 services:
-  postgres:
+  ophthacloud-postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: ophthacloud_db
       POSTGRES_USER: ophthacloud
       POSTGRES_PASSWORD: dev_password_change_in_prod
-    ports: ["5432:5432"]
+    ports: ["5434:5432"]
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -27,13 +27,13 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
+      KC_DB_URL: jdbc:postgresql://ophthacloud-postgres:5432/keycloak_db
       KC_DB_USERNAME: ophthacloud
       KC_DB_PASSWORD: dev_password_change_in_prod
     ports: ["8180:8080"]
     volumes: [./keycloak:/opt/keycloak/data/import]
     depends_on:
-      postgres: { condition: service_healthy }
+      ophthacloud-postgres: { condition: service_healthy }
 
   minio:
     image: minio/minio:latest

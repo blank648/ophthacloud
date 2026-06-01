@@ -3,8 +3,8 @@ package ro.ophthacloud.modules.optical.dto;
 import tools.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import ro.ophthacloud.modules.optical.internal.OpticalOrderEntity;
-import ro.ophthacloud.modules.optical.internal.OrderStage;
-import ro.ophthacloud.modules.optical.internal.OrderType;
+import ro.ophthacloud.modules.optical.OrderStage;
+import ro.ophthacloud.modules.optical.OrderType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

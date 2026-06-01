@@ -208,7 +208,7 @@ class EmrFacadeTest {
         ConsultationEntity consultation = consultationEntity(ConsultationStatus.IN_PROGRESS);
         ConsultationSectionEntity sectionG = sectionEntity("G", false); // not completed
 
-        when(consultationRepository.findByIdAndTenantId(CONSULT_ID, TENANT_ID)).thenReturn(Optional.of(consultation));
+        when(consultationRepository.findByIdAndTenantIdForUpdate(CONSULT_ID, TENANT_ID)).thenReturn(Optional.of(consultation));
         when(sectionRepository.findByConsultationIdAndSectionCode(CONSULT_ID, "G")).thenReturn(Optional.of(sectionG));
 
         assertThatThrownBy(() -> facade.signConsultation(CONSULT_ID, new SignConsultationRequest(true)))
@@ -222,7 +222,7 @@ class EmrFacadeTest {
     @DisplayName("signConsultation: should throw ConsultationAlreadySignedException when already SIGNED")
     void signConsultation_shouldThrow_whenAlreadySigned() {
         ConsultationEntity consultation = consultationEntity(ConsultationStatus.SIGNED);
-        when(consultationRepository.findByIdAndTenantId(CONSULT_ID, TENANT_ID)).thenReturn(Optional.of(consultation));
+        when(consultationRepository.findByIdAndTenantIdForUpdate(CONSULT_ID, TENANT_ID)).thenReturn(Optional.of(consultation));
 
         assertThatThrownBy(() -> facade.signConsultation(CONSULT_ID, new SignConsultationRequest(true)))
                 .isInstanceOf(ConsultationAlreadySignedException.class);
@@ -248,7 +248,7 @@ class EmrFacadeTest {
         ConsultationEntity consultation = consultationEntity(ConsultationStatus.IN_PROGRESS);
         ConsultationSectionEntity sectionG = sectionEntity("G", true); // completed
 
-        when(consultationRepository.findByIdAndTenantId(CONSULT_ID, TENANT_ID)).thenReturn(Optional.of(consultation));
+        when(consultationRepository.findByIdAndTenantIdForUpdate(CONSULT_ID, TENANT_ID)).thenReturn(Optional.of(consultation));
         when(sectionRepository.findByConsultationIdAndSectionCode(CONSULT_ID, "G")).thenReturn(Optional.of(sectionG));
         when(consultationRepository.save(consultation)).thenReturn(consultation);
         when(sectionRepository.findAllByConsultationId(CONSULT_ID)).thenReturn(List.of(sectionG));
@@ -272,7 +272,7 @@ class EmrFacadeTest {
         ConsultationEntity consultation = consultationEntity(ConsultationStatus.IN_PROGRESS);
         ConsultationSectionEntity sectionG = sectionEntity("G", true);
 
-        when(consultationRepository.findByIdAndTenantId(CONSULT_ID, TENANT_ID)).thenReturn(Optional.of(consultation));
+        when(consultationRepository.findByIdAndTenantIdForUpdate(CONSULT_ID, TENANT_ID)).thenReturn(Optional.of(consultation));
         when(sectionRepository.findByConsultationIdAndSectionCode(CONSULT_ID, "G")).thenReturn(Optional.of(sectionG));
         when(consultationRepository.save(consultation)).thenReturn(consultation);
         when(sectionRepository.findAllByConsultationId(CONSULT_ID)).thenReturn(List.of(sectionG));

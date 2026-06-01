@@ -5,7 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import ro.ophthacloud.infrastructure.web.RequestContextHelper;
+import ro.ophthacloud.shared.util.RequestContextHelper;
+import ro.ophthacloud.shared.security.OphthaPrincipal;
 import ro.ophthacloud.shared.security.SecurityUtils;
 
 import java.util.UUID;
@@ -115,6 +116,11 @@ public class AuditLogService {
      * Falls back to {@code null} for system/batch contexts (logged as WARN).
      */
     private UUID resolveTenantId() {
+        UUID contextTenantId = ro.ophthacloud.shared.tenant.TenantContext.get();
+        if (contextTenantId != null) {
+            return contextTenantId;
+        }
+
         try {
             String tenantIdStr = SecurityUtils.currentTenantId();
             return UUID.fromString(tenantIdStr);
@@ -131,7 +137,15 @@ public class AuditLogService {
      */
     private String resolveActorId() {
         try {
-            return SecurityUtils.currentPrincipal().keycloakUserId();
+            OphthaPrincipal principal = SecurityUtils.currentPrincipal();
+            if (principal.keycloakUserId() != null) {
+                return principal.keycloakUserId();
+            } else if (principal.staffId() != null) {
+                return principal.staffId();
+            } else if (principal.patientId() != null) {
+                return principal.patientId();
+            }
+            return SYSTEM_USER_ID;
         } catch (IllegalStateException e) {
             log.warn("AuditLogService: no principal in SecurityContext — using '{}' as actorId.", SYSTEM_USER_ID);
             return SYSTEM_USER_ID;

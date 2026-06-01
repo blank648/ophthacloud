@@ -1,6 +1,6 @@
 package ro.ophthacloud.modules.investigations.event;
 
-import ro.ophthacloud.modules.investigations.internal.InvestigationCategoryType;
+import ro.ophthacloud.modules.investigations.InvestigationCategoryType;
 
 import java.time.Instant;
 import java.util.UUID;

@@ -54,6 +54,7 @@ public class PermissionsService {
 
         // Step 1: Replace all permission rows for this role in DB
         permissionRepository.deleteByTenantIdAndRole(tenantId, role);
+        permissionRepository.flush();
 
         List<TenantRoleModulePermissionEntity> newPermissions = request.permissions().stream()
                 .map(entry -> TenantRoleModulePermissionEntity.builder()

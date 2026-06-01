@@ -2,7 +2,6 @@ package ro.ophthacloud.modules.admin;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.modulith.core.ApplicationModules;
 import ro.ophthacloud.OphthacloudBackendApplication;
 

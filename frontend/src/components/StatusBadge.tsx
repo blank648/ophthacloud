@@ -2,26 +2,27 @@ import React from 'react';
 import { statusLabels, statusStyles, clinicalFlagStyles, appointmentTypeLabels, appointmentTypeColors } from '@/data/demo-data';
 import type { AppointmentStatus, AppointmentType } from '@/data/demo-data';
 
-export const AppointmentStatusBadge: React.FC<{ status: AppointmentStatus }> = ({ status }) => {
-  const style = statusStyles[status];
+export const AppointmentStatusBadge: React.FC<{ status: string }> = ({ status }) => {
+  const normalized = status ? status.toLowerCase() : '';
+  const style = statusStyles[normalized] || { bg: '#E5E7EB', text: '#374151' };
+  const label = statusLabels[normalized] || status;
   return (
     <span
       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold badge-text"
       style={{ backgroundColor: style.bg, color: style.text }}
     >
-      {statusLabels[status]}
+      {label}
     </span>
   );
 };
 
-export const AppointmentTypeBadge: React.FC<{ type: AppointmentType }> = ({ type }) => {
-  const color = appointmentTypeColors[type];
+export const AppointmentTypeBadge: React.FC<{ name: string; color: string }> = ({ name, color }) => {
   return (
     <span
       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold badge-text"
       style={{ backgroundColor: `${color}1A`, color }}
     >
-      {appointmentTypeLabels[type]}
+      {name}
     </span>
   );
 };

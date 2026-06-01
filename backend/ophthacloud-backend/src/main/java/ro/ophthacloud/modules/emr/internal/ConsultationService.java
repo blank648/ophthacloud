@@ -95,6 +95,7 @@ public class ConsultationService {
 
         // Link appointment if provided — raw JDBC to avoid cross-module entity dependency
         if (saved.getAppointmentId() != null) {
+            consultationRepository.flush();
             jdbcTemplate.update(
                     "UPDATE appointments SET consultation_id = ? WHERE id = ?",
                     saved.getId(), saved.getAppointmentId());
@@ -249,7 +250,7 @@ public class ConsultationService {
             throw new IllegalArgumentException("Signature confirmation must be true.");
         }
 
-        ConsultationEntity consultation = requireConsultation(consultationId);
+        ConsultationEntity consultation = requireConsultationForUpdate(consultationId);
 
         // Pre-condition 1: not already signed
         if (consultation.getStatus() == ConsultationStatus.SIGNED) {
@@ -389,6 +390,12 @@ public class ConsultationService {
     private ConsultationEntity requireConsultation(UUID id) {
         UUID tenantId = TenantContext.get();
         return consultationRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ConsultationNotFoundException(id));
+    }
+
+    private ConsultationEntity requireConsultationForUpdate(UUID id) {
+        UUID tenantId = TenantContext.get();
+        return consultationRepository.findByIdAndTenantIdForUpdate(id, tenantId)
                 .orElseThrow(() -> new ConsultationNotFoundException(id));
     }
 

@@ -1,22 +1,33 @@
 import React from 'react';
 import AppLayout from '@/components/AppLayout';
 import KPICard from '@/components/KPICard';
-import { revenueData, serviceMixData, topDiagnoses, doctors } from '@/data/demo-data';
+import { useDashboardKpis, useRevenueStatistics, usePatientDemographics } from '@/hooks/useReports';
 import { DollarSign, TrendingUp, Users, Star, UserPlus } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   PieChart, Pie, Cell,
 } from 'recharts';
 
-const ManagerDashboard: React.FC = () => (
+const ManagerDashboard: React.FC = () => {
+  const { data: kpis } = useDashboardKpis();
+  const today = new Date();
+  const lastYear = new Date();
+  lastYear.setFullYear(today.getFullYear() - 1);
+  const { data: revStats } = useRevenueStatistics(lastYear.toISOString().split('T')[0], today.toISOString().split('T')[0], 'month');
+  const { data: demographics } = usePatientDemographics();
+
+  const revenueData = revStats?.series?.map(s => ({ month: s.period, medical: s.total, optical: 0 })) || [];
+  const topDiagnoses = demographics?.topDiagnoses?.slice(0, 5).map(d => ({ name: d.description, count: d.count })) || [];
+  
+  return (
   <AppLayout breadcrumbs={[{ label: 'Acasă' }, { label: 'Dashboard Manager' }]}>
     {/* KPI row */}
     <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
-      <KPICard icon={DollarSign} title="Revenue lunar" value="90.200 RON" trend={{ value: '+15% vs. luna trecută', positive: true }} iconColor="#10B981" />
-      <KPICard icon={TrendingUp} title="Revenue YTD" value="536.400 RON" iconColor="#8B5CF6" />
-      <KPICard icon={Star} title="Conversie Rx→Optic" value="79.5%" trend={{ value: '+3.2%', positive: true }} />
-      <KPICard icon={Users} title="Scor NPS" value="72" iconColor="#F59E0B" />
-      <KPICard icon={UserPlus} title="Pacienți noi" value="34" subtitle="Această lună" iconColor="#06B6D4" />
+      <KPICard icon={DollarSign} title="Revenue săptămână" value={`${kpis?.weekRevenue?.amount || 0} ${kpis?.weekRevenue?.currency || 'RON'}`} trend={{ value: `${kpis?.weekRevenue?.trendPercent || 0}%`, positive: (kpis?.weekRevenue?.trendPercent || 0) >= 0 }} iconColor="#10B981" />
+      <KPICard icon={TrendingUp} title="Comenzi în așteptare" value={kpis?.pendingOrders?.count?.toString() || "0"} iconColor="#8B5CF6" />
+      <KPICard icon={Star} title="Stoc redus" value={kpis?.lowStockItems?.count?.toString() || "0"} />
+      <KPICard icon={Users} title="Pacienți activi" value={kpis?.activePatients?.count?.toString() || "0"} iconColor="#F59E0B" />
+      <KPICard icon={UserPlus} title="Pacienți noi" value={kpis?.activePatients?.newThisMonth?.toString() || "0"} subtitle="Această lună" iconColor="#06B6D4" />
     </div>
 
     {/* Charts row */}
@@ -39,22 +50,22 @@ const ManagerDashboard: React.FC = () => (
 
       {/* Service distribution donut */}
       <div className="bg-card rounded-xl border border-border shadow-sm p-5">
-        <h3 className="text-clinical-md font-semibold mb-4">Distribuție servicii</h3>
+        <h3 className="text-clinical-md font-semibold mb-4">Distribuție pe sexe</h3>
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
-            <Pie data={serviceMixData} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={3} dataKey="value">
-              {serviceMixData.map((entry, i) => (
-                <Cell key={i} fill={entry.color} />
+            <Pie data={Object.entries(demographics?.genderDistribution || {}).map(([gender, count]) => ({ gender, count }))} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={3} dataKey="count" nameKey="gender">
+              {Object.entries(demographics?.genderDistribution || {}).map(([gender], i) => (
+                <Cell key={i} fill={gender === 'F' ? '#F472B6' : '#60A5FA'} />
               ))}
             </Pie>
             <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
           </PieChart>
         </ResponsiveContainer>
         <div className="flex flex-wrap gap-3 mt-2 justify-center">
-          {serviceMixData.map(s => (
-            <div key={s.name} className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-              <span className="text-clinical-xs text-muted-foreground">{s.name}: {s.value}</span>
+          {Object.entries(demographics?.genderDistribution || {}).map(([gender, count]) => (
+            <div key={gender} className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: gender === 'F' ? '#F472B6' : '#60A5FA' }} />
+              <span className="text-clinical-xs text-muted-foreground">{gender}: {count}</span>
             </div>
           ))}
         </div>
@@ -87,37 +98,11 @@ const ManagerDashboard: React.FC = () => (
       {/* Revenue per doctor */}
       <div className="bg-card rounded-xl border border-border shadow-sm p-5">
         <h3 className="text-clinical-md font-semibold mb-4">Revenue per medic</h3>
-        <table className="w-full">
-          <thead>
-            <tr className="border-b-2 border-border">
-              <th className="text-left text-clinical-xs font-semibold text-muted-foreground uppercase tracking-wider py-3">Medic</th>
-              <th className="text-right text-clinical-xs font-semibold text-muted-foreground uppercase tracking-wider py-3">Consult.</th>
-              <th className="text-right text-clinical-xs font-semibold text-muted-foreground uppercase tracking-wider py-3">Revenue</th>
-            </tr>
-          </thead>
-          <tbody>
-            {doctors.map((doc) => (
-              <tr key={doc.id} className="border-b border-border hover:bg-primary-50 transition-colors">
-                <td className="py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 text-[11px] font-semibold flex items-center justify-center">
-                      {doc.name.split(' ').slice(-1)[0][0]}{doc.name.split(' ')[1]?.[0]}
-                    </div>
-                    <div>
-                      <p className="text-clinical-sm font-semibold">{doc.name}</p>
-                      <p className="text-clinical-xs text-muted-foreground">{doc.specialty}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="text-right text-clinical-sm font-clinical">{doc.consultations}</td>
-                <td className="text-right text-clinical-sm font-bold font-clinical text-primary-700">{doc.revenue.toLocaleString('ro-RO')} RON</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <p className="text-clinical-sm text-muted-foreground">Date indisponibile (Așteptând modulul avansat de HR).</p>
       </div>
     </div>
   </AppLayout>
-);
+  );
+};
 
 export default ManagerDashboard;

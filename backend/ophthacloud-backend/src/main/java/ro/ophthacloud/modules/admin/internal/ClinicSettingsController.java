@@ -27,7 +27,7 @@ public class ClinicSettingsController {
     private final AdminFacade adminFacade;
 
     @GetMapping
-    @PreAuthorize("hasPermission('admin', 'MODULE', 'VIEW')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CLINIC_ADMIN', 'DOCTOR', 'RECEPTIONIST', 'OPTOMETRIST', 'NURSE', 'OPTICAL_TECHNICIAN', 'MANAGER')")
     @Operation(summary = "Get clinic settings")
     public ApiResponse<ClinicSettingsDto> getSettings() {
         log.debug("REST request to get clinic settings");

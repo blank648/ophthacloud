@@ -1,6 +1,6 @@
 /**
- * Infrastructure layer — technical plumbing only, not business logic.
- * Contains configuration, persistence helpers, and web filters.
+ * Infrastructure cross-cutting concern — visible to all modules.
+ * Contains base persistence models (BaseEntity, TenantAwareEntity) and common configs.
  */
 @org.springframework.modulith.ApplicationModule(
     type = org.springframework.modulith.ApplicationModule.Type.OPEN

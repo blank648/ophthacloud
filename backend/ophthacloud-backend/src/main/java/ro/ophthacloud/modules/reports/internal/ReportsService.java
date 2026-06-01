@@ -2,7 +2,6 @@ package ro.ophthacloud.modules.reports.internal;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import ro.ophthacloud.modules.reports.dto.*;
 
@@ -16,7 +15,6 @@ public class ReportsService {
 
     private final KpiQueryRepository queryRepository;
 
-    @Cacheable(value = "dashboard-kpis", key = "#tenantId")
     public DashboardKpisDto getDashboardKpis(UUID tenantId) {
         log.debug("Computing dashboard KPIs for tenant: {}", tenantId);
         return new DashboardKpisDto(

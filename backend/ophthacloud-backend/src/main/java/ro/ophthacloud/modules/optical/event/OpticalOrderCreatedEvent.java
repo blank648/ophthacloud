@@ -1,6 +1,6 @@
 package ro.ophthacloud.modules.optical.event;
 
-import ro.ophthacloud.modules.optical.internal.OrderType;
+import ro.ophthacloud.modules.optical.OrderType;
 
 import java.time.Instant;
 import java.util.UUID;

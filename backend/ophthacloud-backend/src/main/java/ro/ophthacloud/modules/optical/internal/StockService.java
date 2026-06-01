@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ro.ophthacloud.modules.optical.event.LowStockAlertEvent;
 import ro.ophthacloud.modules.optical.dto.StockItemDto;
+import ro.ophthacloud.modules.optical.dto.CreateStockItemRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -69,7 +70,7 @@ public class StockService {
             return;
         }
 
-        StockItemEntity item = stockItemRepository.findById(stockItemId)
+        StockItemEntity item = stockItemRepository.findByIdForUpdate(stockItemId)
                 .filter(s -> s.getTenantId().equals(tenantId))
                 .orElseThrow(() -> new OpticalDomainException("STOCK_ITEM_NOT_FOUND", "Stock item not found", org.springframework.http.HttpStatus.NOT_FOUND));
 
@@ -81,5 +82,23 @@ public class StockService {
         StockItemEntity saved = stockItemRepository.save(item);
 
         checkAndPublishLowStockAlert(saved);
+    }
+
+    @Transactional
+    public StockItemDto createItem(UUID tenantId, CreateStockItemRequest request) {
+        StockItemEntity item = new StockItemEntity();
+        item.setName(request.name());
+        item.setCategory(request.category());
+        item.setSku(request.sku());
+        item.setBarcode(request.barcode());
+        item.setBrand(request.brand());
+        item.setCurrentStock(request.currentStock());
+        item.setMinimumStock(request.minimumStock());
+        item.setUnitCost(request.unitCost());
+        item.setUnitPrice(request.unitPrice());
+        item.setLocation(request.location());
+        item.setIsActive(true);
+
+        return StockItemDto.from(stockItemRepository.save(item));
     }
 }

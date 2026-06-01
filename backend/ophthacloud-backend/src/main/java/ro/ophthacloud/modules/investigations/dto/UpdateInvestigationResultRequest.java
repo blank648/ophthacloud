@@ -1,17 +1,19 @@
 package ro.ophthacloud.modules.investigations.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ro.ophthacloud.modules.investigations.internal.InvestigationStatusType;
+import ro.ophthacloud.modules.investigations.InvestigationStatusType;
 
 import java.time.Instant;
 
 @Data
 @Builder
+@Jacksonized
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateInvestigationResultRequest {
@@ -20,7 +22,7 @@ public class UpdateInvestigationResultRequest {
     
     private Instant performedAt;
     
-    private JsonNode resultData;
+    private Map<String, Object> resultData;
     
     private String interpretation;
 }

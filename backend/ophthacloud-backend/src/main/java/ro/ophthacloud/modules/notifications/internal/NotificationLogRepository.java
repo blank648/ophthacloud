@@ -9,6 +9,7 @@ import java.util.UUID;
 
 @Repository
 public interface NotificationLogRepository extends JpaRepository<NotificationLogEntity, UUID> {
+    Page<NotificationLogEntity> findByTenantId(UUID tenantId, Pageable pageable);
     Page<NotificationLogEntity> findByTenantIdAndStatus(UUID tenantId, NotificationStatus status, Pageable pageable);
     Page<NotificationLogEntity> findByTenantIdAndPatientId(UUID tenantId, UUID patientId, Pageable pageable);
 
@@ -20,3 +21,4 @@ public interface NotificationLogRepository extends JpaRepository<NotificationLog
             """)
     java.util.List<NotificationLogEntity> findDueNotifications();
 }
+

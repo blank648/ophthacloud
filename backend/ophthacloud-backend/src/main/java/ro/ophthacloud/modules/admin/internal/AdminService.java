@@ -7,7 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 import ro.ophthacloud.modules.admin.dto.CreateStaffMemberRequest;
 import ro.ophthacloud.modules.admin.dto.StaffMemberDto;
 import ro.ophthacloud.shared.tenant.TenantContext;
+import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -17,6 +19,8 @@ public class AdminService {
 
     private final StaffMemberRepository staffMemberRepository;
     private final KeycloakAdminService keycloakAdminService;
+    private final TenantRoleModulePermissionRepository permissionRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public StaffMemberDto createStaffMember(CreateStaffMemberRequest request) {
@@ -44,9 +48,11 @@ public class AdminService {
             entity = staffMemberRepository.saveAndFlush(entity);
 
             // Step 3: Set Keycloak attributes
-            // Default permissions as empty JSON object for now until permission matrix is implemented
-            String defaultPermissionsJson = "{}";
-            keycloakAdminService.setAttributes(keycloakUserId, tenantId, entity.getId(), request.role(), defaultPermissionsJson);
+            // Resolve actual configured permissions for the role
+            List<TenantRoleModulePermissionEntity> permissions = permissionRepository.findByTenantIdAndRole(tenantId, request.role());
+            String permissionsJson = generatePermissionsJson(permissions);
+            
+            keycloakAdminService.setAttributes(keycloakUserId, tenantId, entity.getId(), request.role(), permissionsJson);
 
             // Send verification email if requested (best effort)
             if (request.sendInviteEmail()) {
@@ -59,6 +65,26 @@ public class AdminService {
             log.error("Workflow failed for creating staff member {}. Rolling back Keycloak user.", request.email(), e);
             keycloakAdminService.deleteUser(keycloakUserId);
             throw e;
+        }
+    }
+
+    private String generatePermissionsJson(List<TenantRoleModulePermissionEntity> permissions) {
+        java.util.Map<String, java.util.Map<String, Boolean>> permMap = new java.util.HashMap<>();
+        for (TenantRoleModulePermissionEntity p : permissions) {
+            java.util.Map<String, Boolean> modulePerms = new java.util.HashMap<>();
+            modulePerms.put("view", p.isCanView());
+            modulePerms.put("create", p.isCanCreate());
+            modulePerms.put("edit", p.isCanEdit());
+            modulePerms.put("delete", p.isCanDelete());
+            modulePerms.put("sign", p.isCanSign());
+            modulePerms.put("export", p.isCanExport());
+            permMap.put(p.getModuleCode(), modulePerms);
+        }
+        try {
+            return objectMapper.writeValueAsString(permMap);
+        } catch (Exception e) {
+            log.error("Failed to serialize permissions JSON", e);
+            return "{}";
         }
     }
 

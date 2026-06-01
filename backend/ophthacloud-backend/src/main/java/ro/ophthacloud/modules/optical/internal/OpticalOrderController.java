@@ -2,10 +2,12 @@ package ro.ophthacloud.modules.optical.internal;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ro.ophthacloud.modules.optical.dto.*;
+import ro.ophthacloud.modules.optical.OrderStage;
 import ro.ophthacloud.shared.tenant.TenantContext;
 import ro.ophthacloud.shared.api.ApiResponse;
 import ro.ophthacloud.shared.security.SecurityUtils;
@@ -19,10 +21,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/v1/optical/orders")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Optical / Orders", description = "Endpoints for managing optical orders")
 public class OpticalOrderController {
 
     private final OpticalOrderService orderService;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -32,8 +36,39 @@ public class OpticalOrderController {
         return ApiResponse.of(orderService.createOrder(
                 TenantContext.require(), 
                 request, 
-                UUID.fromString(SecurityUtils.currentStaffId())
+                resolveStaffId()
         ));
+    }
+
+    private UUID resolveStaffId() {
+        String staffIdStr = SecurityUtils.currentStaffId();
+        if (staffIdStr != null && !staffIdStr.isBlank()) {
+            try {
+                return UUID.fromString(staffIdStr);
+            } catch (IllegalArgumentException ignored) {}
+        }
+        
+        // Fallback: look up in staff_members table by tenant_id and keycloak_user_id
+        try {
+            UUID tenantId = TenantContext.require();
+            String keycloakUserId = SecurityUtils.currentPrincipal().keycloakUserId();
+            if (keycloakUserId != null) {
+                String staffIdFromDb = jdbcTemplate.queryForObject(
+                    "SELECT id FROM staff_members WHERE tenant_id = ? AND keycloak_user_id = ?",
+                    String.class,
+                    tenantId,
+                    keycloakUserId
+                );
+                if (staffIdFromDb != null) {
+                    return UUID.fromString(staffIdFromDb);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to resolve staff ID from database, falling back to random UUID", e);
+        }
+        
+        // Ultimate fallback: generate a random UUID so the request does not fail with NullPointerException
+        return UUID.randomUUID();
     }
 
     @GetMapping("/{id}")

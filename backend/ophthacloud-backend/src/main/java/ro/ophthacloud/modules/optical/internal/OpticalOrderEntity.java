@@ -7,6 +7,8 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import ro.ophthacloud.infrastructure.persistence.TenantAwareEntity;
+import ro.ophthacloud.modules.optical.OrderStage;
+import ro.ophthacloud.modules.optical.OrderType;
 
 import java.math.BigDecimal;
 import java.time.Instant;

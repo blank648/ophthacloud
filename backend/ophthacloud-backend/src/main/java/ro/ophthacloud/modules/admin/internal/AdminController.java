@@ -36,7 +36,7 @@ public class AdminController {
     private final AdminFacade adminFacade;
 
     @GetMapping
-    @PreAuthorize("hasPermission('admin', 'MODULE', 'VIEW')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CLINIC_ADMIN', 'DOCTOR', 'RECEPTIONIST', 'OPTOMETRIST', 'NURSE', 'OPTICAL_TECHNICIAN', 'MANAGER')")
     @Operation(summary = "List staff members")
     public PagedApiResponse<StaffMemberDto> listStaff(
             @RequestParam(required = false) StaffRole role,

@@ -40,7 +40,7 @@ public class AppointmentController {
      */
     @Operation(summary = "List appointments (calendar feed)", description = "Retrieves a non-paginated list of appointments for a specific date range. Max 31 days.")
     @GetMapping("/api/v1/appointments")
-    @PreAuthorize("hasPermission('appointments', 'MODULE', 'VIEW')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CLINIC_ADMIN', 'DOCTOR', 'RECEPTIONIST', 'OPTOMETRIST', 'NURSE', 'OPTICAL_TECHNICIAN', 'MANAGER')")
     public ApiResponse<List<AppointmentDto>> listCalendar(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
