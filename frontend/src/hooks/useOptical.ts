@@ -103,3 +103,13 @@ export function useServices() {
     queryFn: () => opticalService.listServices(),
   });
 }
+
+export function useDeleteStockItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => opticalService.deleteStockItem(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['stockItems'] });
+    },
+  });
+}

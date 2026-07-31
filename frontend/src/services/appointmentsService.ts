@@ -32,7 +32,7 @@ export const appointmentsService = {
   },
 
   updateAppointmentStatus(id: string, status: AppointmentStatus, reason?: string) {
-    const body: UpdateStatusRequest = { status, reason };
+    const body: UpdateStatusRequest = { status, cancellationReason: reason };
     return apiPatch<AppointmentDto>(`${BASE}/${id}/status`, body);
   },
 

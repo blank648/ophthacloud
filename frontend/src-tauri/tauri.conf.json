@@ -1,0 +1,31 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "ophthacloud",
+  "version": "0.1.0",
+  "identifier": "com.ophthacloud.app",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "security": {
+      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://127.0.0.1:8180 http://localhost:8180 http://localhost:8080 tauri: http://tauri.localhost; connect-src 'self' http://127.0.0.1:8180 http://localhost:8180 http://localhost:8080 tauri: http://tauri.localhost ws://localhost:5173; navigate-to 'self' http://127.0.0.1:8180 http://localhost:8180 tauri: http://tauri.localhost; img-src 'self' data: http://localhost:8080 tauri: http://tauri.localhost;"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "android": {
+      "debugApplicationIdSuffix": ".debug"
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Check, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 const OSDI_QUESTIONS = [
   'Ochi sensibili la lumină',

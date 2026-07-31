@@ -1,5 +1,5 @@
 import { apiGet, apiGetPaged, apiPost, apiPut, apiClient } from '@/lib/apiClient';
-import type { PagedApiResponse, ApiResponse } from '@/types/api';
+import type { ApiResponse } from '@/types/api';
 import type {
   InvestigationDto,
   CreateInvestigationRequest,

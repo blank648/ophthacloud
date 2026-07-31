@@ -17,4 +17,7 @@ public interface OpticalOrderRepository extends JpaRepository<OpticalOrderEntity
 
     @Query("SELECT COUNT(o) FROM OpticalOrderEntity o WHERE o.tenantId = :tenantId AND EXTRACT(YEAR FROM o.createdAt) = :year")
     long countByTenantIdAndYear(@Param("tenantId") UUID tenantId, @Param("year") int year);
+
+    @Query("SELECT MAX(o.orderNumber) FROM OpticalOrderEntity o WHERE o.tenantId = :tenantId AND o.orderNumber LIKE :prefix")
+    String findMaxOrderNumberByTenantIdAndPrefix(@Param("tenantId") UUID tenantId, @Param("prefix") String prefix);
 }

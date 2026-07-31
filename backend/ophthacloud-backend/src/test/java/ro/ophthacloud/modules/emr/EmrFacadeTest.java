@@ -22,6 +22,7 @@ import ro.ophthacloud.shared.audit.AuditLogService;
 import ro.ophthacloud.shared.security.ModulePermissions;
 import ro.ophthacloud.shared.security.OphthaClinicalAuthenticationToken;
 import ro.ophthacloud.shared.security.OphthaPrincipal;
+import ro.ophthacloud.shared.security.StaffNameResolver;
 import ro.ophthacloud.shared.tenant.TenantContext;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -57,6 +58,7 @@ class EmrFacadeTest {
     @Mock private SeqCalculator                 seqCalculator;
     @Mock private AuditLogService               auditLogService;
     @Mock private ApplicationEventPublisher     eventPublisher;
+    @Mock private StaffNameResolver             staffNameResolver;
 
     private ConsultationService service;
     private EmrFacade           facade;
@@ -91,12 +93,14 @@ class EmrFacadeTest {
                 seqCalculator,
                 auditLogService,
                 eventPublisher,
-                objectMapper
+                objectMapper,
+                staffNameResolver
         );
         facade = new EmrFacade(service);
 
         doNothing().when(auditLogService).log(any());
         doNothing().when(sectionDataValidator).validateSectionData(any(), any());
+        when(staffNameResolver.resolveDoctorName(any(), any())).thenReturn("Dr. DOCTOR");
     }
 
     @AfterEach
@@ -152,7 +156,7 @@ class EmrFacadeTest {
 
         // Verify section codes are exactly A through I
         List<String> codes = savedSections.stream()
-                .map(ConsultationSectionEntity::getSectionCode)
+                .map(s -> s.getSectionCode())
                 .toList();
         assertThat(codes).containsExactly("A", "B", "C", "D", "E", "F", "G", "H", "I");
     }

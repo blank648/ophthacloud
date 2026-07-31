@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
+import { downloadPDF, printElement } from '@/lib/printUtils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePatientDemographics, useRevenueStatistics, useDashboardKpis } from '@/hooks/useReports';
+import { usePatientDemographics, useRevenueStatistics, useDashboardKpis, useClinicalStatistics } from '@/hooks/useReports';
 import { useInvoices } from '@/hooks/useOptical';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient, apiGet } from '@/lib/apiClient';
-import type { ApiResponse } from '@/types/api';
+import { apiGet } from '@/lib/apiClient';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Download, Banknote, CreditCard, ShoppingBag, Box, FileSpreadsheet, Printer } from 'lucide-react';
+import { Download, FileSpreadsheet, Printer } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -84,6 +84,7 @@ const ReportsPage: React.FC = () => {
   const { data: revStats } = useRevenueStatistics(filterFrom, filterTo, filterGroupBy);
   const { data: demographics } = usePatientDemographics();
   const { data: kpis } = useDashboardKpis();
+  const { data: clinicalStats } = useClinicalStatistics();
   const { data: invoicesData } = useInvoices({ page: 0, size: 100 });
 
   const { data: stockItems } = useQuery({
@@ -285,12 +286,17 @@ const ReportsPage: React.FC = () => {
   };
 
   const exportToPDF = () => {
-    window.print();
+    printElement('#reports-content', 'Raport_Clinica');
   };
+
+  // Clinical reports datasets — computed live from signed consultations (no mock data)
+  const vaData = clinicalStats?.vaDistribution ?? [];
+  const doctorDurationData = clinicalStats?.consultationDurationByDoctor ?? [];
 
   return (
     <AppLayout breadcrumbs={[{ label: 'Rapoarte & KPI' }]}>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <div id="reports-content">
+        <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           aside, nav, header, [role="tablist"], .no-print, button {
             display: none !important;
@@ -372,19 +378,39 @@ const ReportsPage: React.FC = () => {
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-card rounded-xl border border-border shadow-sm p-4">
               <h3 className="text-clinical-sm font-semibold mb-3">VA post-refracție</h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <div className="w-full h-full flex items-center justify-center bg-muted/20 rounded-lg">
-                  <p className="text-clinical-sm text-muted-foreground">Date indisponibile</p>
+              {vaData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={vaData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="range" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                    <Tooltip formatter={(v: number) => [`${v} ochi`, 'Volum']} />
+                    <Bar dataKey="count" name="Acuitate" fill="#6366F1" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[220px] flex items-center justify-center text-clinical-xs text-muted-foreground text-center px-4">
+                  Nu există date de acuitate vizuală corectată (Secțiunea A) în consultațiile semnate.
                 </div>
-              </ResponsiveContainer>
+              )}
             </div>
             <div className="bg-card rounded-xl border border-border shadow-sm p-4">
               <h3 className="text-clinical-sm font-semibold mb-3">Timp consultație per medic</h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <div className="w-full h-full flex items-center justify-center bg-muted/20 rounded-lg">
-                  <p className="text-clinical-sm text-muted-foreground">Date indisponibile</p>
+              {doctorDurationData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={doctorDurationData} layout="vertical" margin={{ left: -10, right: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `${v} min`} />
+                    <YAxis dataKey="doctorName" type="category" tick={{ fontSize: 11 }} width={120} />
+                    <Tooltip formatter={(v: number) => [`${v} minute`, 'Durată medie']} />
+                    <Bar dataKey="avgMinutes" name="Durată medie" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[220px] flex items-center justify-center text-clinical-xs text-muted-foreground text-center px-4">
+                  Nu există încă suficiente consultații semnate pentru a calcula durata medie.
                 </div>
-              </ResponsiveContainer>
+              )}
             </div>
           </div>
         </TabsContent>
@@ -425,7 +451,21 @@ const ReportsPage: React.FC = () => {
           </div>
           <div className="bg-card rounded-xl border border-border shadow-sm p-4">
             <h3 className="text-clinical-sm font-semibold mb-3">Revenue per medic</h3>
-            <p className="text-clinical-sm text-muted-foreground">Date indisponibile.</p>
+            {revStats?.byDoctor && revStats.byDoctor.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={revStats.byDoctor} layout="vertical" margin={{ left: -10, right: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `${v} RON`} />
+                  <YAxis dataKey="doctorName" type="category" tick={{ fontSize: 11 }} width={120} />
+                  <Tooltip formatter={(v: number) => `${v.toLocaleString()} RON`} />
+                  <Bar dataKey="total" name="Venit total" fill="#10B981" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-48 flex items-center justify-center bg-muted/20 rounded-lg">
+                <p className="text-clinical-sm text-muted-foreground">Niciun venit înregistrat pe medici în perioada selectată</p>
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -595,6 +635,7 @@ const ReportsPage: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </AppLayout>
   );
 };

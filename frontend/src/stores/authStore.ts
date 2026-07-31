@@ -31,16 +31,24 @@ export const useAuthStore = create<AuthState>((set) => ({
   userInfo: null,
   isAuthenticated: false,
   isLoading: true,
-  setToken: (token, refreshToken = null) =>
+  setToken: (token, refreshToken = null) => {
+    if (token) localStorage.setItem('kc_token', token);
+    else localStorage.removeItem('kc_token');
+    
+    if (refreshToken) localStorage.setItem('kc_refresh_token', refreshToken);
+    else localStorage.removeItem('kc_refresh_token');
+
     set((s) => ({
       token,
       refreshToken: refreshToken ?? s.refreshToken,
       isAuthenticated: !!token,
-    })),
+    }));
+  },
   setUserInfo: (userInfo) => set({ userInfo }),
   setLoading: (isLoading) => set({ isLoading }),
   clearAuth: () => {
     localStorage.removeItem('kc_token');
+    localStorage.removeItem('kc_refresh_token');
     set({
       token: null,
       refreshToken: null,

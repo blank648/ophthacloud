@@ -50,9 +50,10 @@ export interface OpticalOrderDto {
 export interface CreateOrderRequest {
   patientId: string;
   prescriptionId?: string;
-  items: OrderItemDto[];
+  consultationId?: string;
+  orderType: 'GLASSES' | 'CONTACTS';
+  depositPaid: number;
   notes?: string;
-  expectedReadyAt?: string;
 }
 
 export interface UpdateStageRequest {

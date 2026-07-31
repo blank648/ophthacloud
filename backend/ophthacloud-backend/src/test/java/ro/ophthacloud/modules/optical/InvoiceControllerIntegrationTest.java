@@ -74,6 +74,22 @@ class InvoiceControllerIntegrationTest extends BaseIntegrationTest {
         assertThat(data.get("paidAt")).isNotNull();
     }
 
+    @Test
+    @DisplayName("GET /api/v1/optical/invoices: should list all invoices")
+    void listInvoices_shouldSucceed() {
+        UUID patientId = createPatient(TENANT_A);
+        UUID orderId = createOrder(TENANT_A, patientId);
+        createInvoice(TENANT_A, orderId, patientId);
+
+        ResponseEntity<Map<String, Object>> response = client.get()
+                .uri("/api/v1/optical/invoices")
+                .headers(h -> h.addAll(headersForRole("DOCTOR", TENANT_A)))
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<Map<String, Object>>() {});
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
     private UUID createPatient(UUID tenantId) {
         UUID id = UUID.randomUUID();
         jdbcTemplate.update(

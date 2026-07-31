@@ -8,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,7 +20,9 @@ import ro.ophthacloud.modules.investigations.InvestigationCategoryType;
 import ro.ophthacloud.modules.investigations.InvestigationStatusType;
 import ro.ophthacloud.shared.api.ApiResponse;
 import ro.ophthacloud.shared.api.PagedApiResponse;
+import ro.ophthacloud.shared.security.OphthaPrincipal;
 import ro.ophthacloud.shared.security.SecurityUtils;
+import ro.ophthacloud.shared.security.StaffNameResolver;
 
 import java.util.Map;
 import java.util.UUID;
@@ -36,7 +37,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class InvestigationController {
 
     private final InvestigationsFacade facade;
-    private final JdbcTemplate jdbcTemplate;
+    private final StaffNameResolver staffNameResolver;
 
     @GetMapping
     @PreAuthorize("hasPermission('investigations', 'MODULE', 'VIEW') or hasPermission('investigations', 'MODULE', 'EDIT')")
@@ -61,23 +62,11 @@ public class InvestigationController {
     @Operation(summary = "Create new investigation order")
     public ApiResponse<InvestigationDto> createInvestigation(@Valid @RequestBody CreateInvestigationRequest request) {
         UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
-        ro.ophthacloud.shared.security.OphthaPrincipal principal = SecurityUtils.currentPrincipal();
+        OphthaPrincipal principal = SecurityUtils.currentPrincipal();
         UUID userId = UUID.fromString(principal.staffId() != null ? principal.staffId() : principal.keycloakUserId());
-        
-        String userName = "Dr. " + principal.staffRole();
-        try {
-            String realName = jdbcTemplate.queryForObject(
-                "SELECT first_name || ' ' || last_name FROM staff_members WHERE tenant_id = ? AND (id = ? OR keycloak_user_id = ?)",
-                String.class,
-                tenantId,
-                userId,
-                principal.keycloakUserId() != null ? UUID.fromString(principal.keycloakUserId()) : userId
-            );
-            if (realName != null && !realName.isBlank()) {
-                userName = "Dr. " + realName;
-            }
-        } catch (Exception ignored) {}
-        
+
+        String userName = staffNameResolver.resolveDoctorName(principal, tenantId);
+
         InvestigationDto created = facade.createInvestigation(tenantId, userId, userName, request);
         return ApiResponse.of(created);
     }

@@ -40,7 +40,8 @@ public class ReportsService {
     public RevenueStatisticsDto getRevenueStatistics(UUID tenantId, LocalDate from, LocalDate to, String groupBy) {
         return new RevenueStatisticsDto(
                 groupBy,
-                queryRepository.getRevenueSeries(tenantId, from, to, groupBy)
+                queryRepository.getRevenueSeries(tenantId, from, to, groupBy),
+                queryRepository.getRevenueByDoctor(tenantId, from, to)
         );
     }
 
@@ -50,5 +51,12 @@ public class ReportsService {
 
     public PatientDemographicsDto getPatientDemographics(UUID tenantId) {
         return queryRepository.getPatientDemographics(tenantId);
+    }
+
+    public ClinicalStatisticsDto getClinicalStatistics(UUID tenantId) {
+        return new ClinicalStatisticsDto(
+                queryRepository.getVaDistribution(tenantId),
+                queryRepository.getConsultationDurationByDoctor(tenantId)
+        );
     }
 }

@@ -21,7 +21,7 @@ public class StockService {
     @Transactional(readOnly = true)
     public List<StockItemDto> listItems(UUID tenantId) {
         return stockItemRepository.findAll().stream()
-                .filter(s -> s.getTenantId().equals(tenantId))
+                .filter(s -> s.getTenantId().equals(tenantId) && Boolean.TRUE.equals(s.getIsActive()))
                 .map(StockItemDto::from)
                 .toList();
     }
@@ -29,6 +29,7 @@ public class StockService {
     @Transactional(readOnly = true)
     public List<StockItemDto> getLowStockReport(UUID tenantId) {
         return stockItemRepository.findByTenantIdAndCurrentStockLessThanEqual(tenantId, 5).stream() // Default threshold
+                .filter(s -> Boolean.TRUE.equals(s.getIsActive()))
                 .map(StockItemDto::from)
                 .toList();
     }
@@ -100,5 +101,12 @@ public class StockService {
         item.setIsActive(true);
 
         return StockItemDto.from(stockItemRepository.save(item));
+    }
+
+    @Transactional
+    public void deleteItem(UUID tenantId, UUID stockItemId) {
+        StockItemEntity item = findStockItemOrThrow(tenantId, stockItemId);
+        item.setIsActive(false);
+        stockItemRepository.save(item);
     }
 }

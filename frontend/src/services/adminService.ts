@@ -12,7 +12,7 @@ const BASE = '/api/v1/admin';
 export const adminService = {
   // --- Staff ---
   listStaff: async (params?: PaginatedParams & { role?: StaffRole }) => {
-    return apiGetPaged<StaffMember>(`${BASE}/staff`, params);
+    return apiGetPaged<StaffMember>(`${BASE}/staff`, params as any);
   },
   createStaff: async (request: CreateStaffMemberRequest): Promise<StaffMember> => {
     return apiPost<StaffMember>(`${BASE}/staff`, request);
@@ -53,7 +53,7 @@ export const adminService = {
 
   // --- Audit Logs ---
   listAuditLogs: async (params?: PaginatedParams & { entityType?: string; entityId?: string; userId?: string; action?: string; from?: string; to?: string }) => {
-    return apiGetPaged<AuditLogDto>('/api/v1/audit/log', params);
+    return apiGetPaged<AuditLogDto>('/api/v1/audit/log', params as any);
   }
 };
 

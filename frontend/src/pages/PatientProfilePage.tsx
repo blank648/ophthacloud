@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/AppLayout';
-import { clinicalFlagStyles, prescriptionStatusStyles } from '@/data/demo-data';
+import { prescriptionStatusStyles } from '@/data/demo-data';
 import { ClinicalFlagBadge } from '@/components/StatusBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, FileText, Shield, FolderOpen, ClipboardList, Check, X, AlertTriangle, Info, Lock, Download, Upload, Eye, ChevronDown, ChevronRight, Pill, Loader2, Edit, Save, Phone, MapPin } from 'lucide-react';
@@ -20,16 +20,20 @@ const PatientProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission('patients', 'EDIT');
+  // Patient access log is GDPR audit data — admin-only endpoint. Only fetch it for users
+  // with admin VIEW, otherwise the 403 would bounce the whole profile to /unauthorized.
+  const canViewAudit = hasPermission('admin', 'VIEW');
+
   const { data: realPatient, isLoading, isError } = usePatient(id);
   const { data: consultationsPage } = useConsultations(id, { page: 0, size: 50 });
   const { data: prescriptionsPage } = usePrescriptions(id, { page: 0, size: 50 });
-  const { data: auditLogsPage } = useAuditLogs({ entityType: 'PATIENT', entityId: id });
+  const { data: auditLogsPage } = useAuditLogs({ entityType: 'PATIENT', entityId: id }, { enabled: canViewAudit });
   const inviteMutation = useInvitePatientToPortal();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const { mutateAsync: updatePatient, isPending: isUpdating } = useUpdatePatient();
-  const { hasPermission } = usePermissions();
-  const canEdit = hasPermission('patients', 'EDIT');
 
   const {
     register,
@@ -113,9 +117,9 @@ const PatientProfilePage: React.FC = () => {
     status: realPatient.isActive ? 'active' : 'inactive',
     dob: realPatient.dateOfBirth,
     preferredLanguage: 'RO',
-    primaryDiagnosis: 'N/A',
-    icdCode: '',
-    lastVisit: 'N/A',
+    primaryDiagnosis: realPatient.medicalHistory?.activeDiagnoses?.[0]?.icd10Name || 'N/A',
+    icdCode: realPatient.medicalHistory?.activeDiagnoses?.[0]?.icd10Code || '',
+    lastVisit: realPatient.statistics?.lastVisitDate ? new Date(realPatient.statistics.lastVisitDate).toLocaleDateString('ro-RO') : 'N/A',
     gender: realPatient.gender === 'MALE' ? 'M' : 'F',
     cnp: realPatient.cnp || '',
     phone: realPatient.phone || '',
@@ -824,6 +828,7 @@ const DocumentsTab: React.FC<{ patient: any }> = ({ patient }) => {
 };
 
 const ConsultationHistoryTab: React.FC<{ patient: any; iopChartData: any[] }> = ({ patient, iopChartData }) => {
+  const navigate = useNavigate();
   const consultations = patient.consultations || [];
   const prescriptions = patient.prescriptions || [];
 
@@ -834,23 +839,31 @@ const ConsultationHistoryTab: React.FC<{ patient: any; iopChartData: any[] }> = 
         <h3 className="text-clinical-md font-semibold mb-4">Consultații</h3>
         <div className="space-y-4 relative">
           <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+          {consultations.length === 0 && (
+            <p className="pl-10 text-clinical-sm text-muted-foreground">Nu există consultații înregistrate pentru acest pacient.</p>
+          )}
           {consultations.map((c: any) => (
             <div key={c.id} className="relative pl-10">
               <div className="absolute left-2 top-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                 {c.signed && <Check className="w-3 h-3 text-white" />}
               </div>
-              <div className="bg-card rounded-xl border border-border shadow-sm p-4">
+              <button
+                type="button"
+                onClick={() => navigate(`/consultation?consultationId=${c.id}`)}
+                title="Vezi detaliile consultației"
+                className="w-full text-left bg-card rounded-xl border border-border shadow-sm p-4 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer"
+              >
                 <div className="flex items-center gap-3 mb-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-primary-100 text-primary-700">{c.date}</span>
                   <span className="text-clinical-sm text-muted-foreground">{c.doctorName}</span>
                   <ClinicalFlagBadge flag={patient.clinicalFlags[0]} />
-                  <span className="text-clinical-xs text-muted-foreground">{c.duration} min</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
                 </div>
                 <p className="text-clinical-sm font-semibold text-foreground mb-1">{c.diagnosis}</p>
                 <p className="text-clinical-xs font-clinical text-muted-foreground mb-2">{c.icdCode}</p>
                 <p className="text-clinical-sm text-muted-foreground">{c.summary}</p>
                 {c.followUpDate && <p className="text-clinical-xs text-primary mt-2">Follow-up: {c.followUpDate}</p>}
-              </div>
+              </button>
             </div>
           ))}
         </div>

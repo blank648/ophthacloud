@@ -10,6 +10,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import ro.ophthacloud.OphthacloudBackendApplication;
 import ro.ophthacloud.modules.emr.event.ConsultationSignedEvent;
 import ro.ophthacloud.shared.audit.AuditLogService;
+import ro.ophthacloud.shared.security.StaffNameResolver;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -38,6 +39,9 @@ class EmrModuleTest {
      */
     @MockitoBean
     AuditLogService auditLogService;
+
+    @MockitoBean
+    StaffNameResolver staffNameResolver;
 
     // ── Test 1: Module structure is valid ─────────────────────────────────────
 

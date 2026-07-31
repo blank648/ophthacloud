@@ -2,7 +2,7 @@ import React from 'react';
 import { toast } from 'sonner';
 import AppLayout from '@/components/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, MessageSquare, Mail, Clock } from 'lucide-react';
+import { MessageSquare, Mail, Clock } from 'lucide-react';
 import { 
   useNotificationRules, 
   useToggleNotificationRule, 

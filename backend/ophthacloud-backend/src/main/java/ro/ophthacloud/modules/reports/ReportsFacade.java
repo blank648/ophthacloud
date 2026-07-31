@@ -33,4 +33,8 @@ public class ReportsFacade {
     public PatientDemographicsDto getPatientDemographics(UUID tenantId) {
         return reportsService.getPatientDemographics(tenantId);
     }
+
+    public ClinicalStatisticsDto getClinicalStatistics(UUID tenantId) {
+        return reportsService.getClinicalStatistics(tenantId);
+    }
 }

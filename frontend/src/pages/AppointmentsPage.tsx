@@ -410,7 +410,7 @@ const BookingModal: React.FC<{ onClose: () => void, dateStr: string, doctorResou
 
   useEffect(() => {
     if (initialPatientRes) {
-      setPatientName(initialPatientRes.name);
+      setPatientName(`${initialPatientRes.firstName} ${initialPatientRes.lastName}`);
     }
   }, [initialPatientRes]);
 

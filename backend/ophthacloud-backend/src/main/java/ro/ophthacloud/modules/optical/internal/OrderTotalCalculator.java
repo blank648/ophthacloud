@@ -31,7 +31,7 @@ public class OrderTotalCalculator {
                     item.setLineTotal(finalLineTotal.setScale(4, RoundingMode.HALF_UP));
                     return finalLineTotal;
                 })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         BigDecimal effectiveDeposit = depositPaid != null ? depositPaid : BigDecimal.ZERO;
         return subtotal.subtract(effectiveDeposit).setScale(4, RoundingMode.HALF_UP);

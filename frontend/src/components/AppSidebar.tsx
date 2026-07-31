@@ -7,7 +7,7 @@ import OphthaLogo from '@/components/OphthaLogo';
 import {
   LayoutDashboard, Users, CalendarDays, Stethoscope, Eye, FileText,
   Glasses, Bell, BarChart3, Settings2, Package, FlaskConical, CreditCard,
-  Shield, ChevronLeft, ChevronRight, Moon, Sun, UserCircle
+  Shield, Moon, Sun, UserCircle
 } from 'lucide-react';
 
 interface NavItem {
@@ -63,7 +63,7 @@ const navGroups: NavGroup[] = [
 let savedScrollTop = 0;
 
 const AppSidebar: React.FC = () => {
-  const { role, darkMode, toggleDarkMode, sidebarCollapsed, toggleSidebar } = useApp();
+  const { darkMode, toggleDarkMode, sidebarCollapsed } = useApp();
   const location = useLocation();
   const userInfo = useAuthStore(s => s.userInfo);
   const { data: clinicData } = useClinicSettings();
@@ -92,13 +92,7 @@ const AppSidebar: React.FC = () => {
     return parts[0].substring(0, 2).toUpperCase();
   };
 
-  const roleLabels: Record<string, string> = {
-    doctor: 'Medic Oftalmolog',
-    receptionist: 'Recepție',
-    manager: 'Manager Clinic',
-    optician: 'Optician',
-    patient: 'Pacient',
-  };
+
 
   return (
     <aside
@@ -117,7 +111,7 @@ const AppSidebar: React.FC = () => {
       {!sidebarCollapsed && (
         <div className="px-4 py-2">
           <p className="text-[11px] text-primary-400 truncate">
-            {clinicData?.name || 'Clinica Oftalmologică Demo SRL'}
+            {clinicData?.name || '…'}
           </p>
         </div>
       )}

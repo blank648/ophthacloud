@@ -4,7 +4,7 @@ import AppLayout from '@/components/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
-import { AlertTriangle, Package, Loader2, Plus, X, Barcode, MapPin } from 'lucide-react';
+import { AlertTriangle, Package, Loader2, Plus, X, Barcode, MapPin, Trash2 } from 'lucide-react';
 
 export interface StockItem {
   id: string;
@@ -26,6 +26,7 @@ export interface StockItem {
 const InventoryPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<StockItem | null>(null);
 
   // Form local state
   const [formCategory, setFormCategory] = useState<StockItem['category']>('rame');
@@ -78,8 +79,18 @@ const InventoryPage: React.FC = () => {
       setFormMinimumStock(5);
       setFormLocation('');
     },
+  });
+
+  const { mutate: deleteStockItem } = useMutation({
+    mutationFn: async (id: string) => {
+      return apiClient.delete(`/api/v1/optical/stock/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stockItems'] });
+      toast.success('Articol șters cu succes din inventar');
+    },
     onError: (err: any) => {
-      const msg = err?.response?.data?.message || err?.message || 'Eroare la adăugarea articolului';
+      const msg = err?.response?.data?.message || err?.message || 'Eroare la ștergerea articolului';
       toast.error(msg);
     }
   });
@@ -212,11 +223,20 @@ const InventoryPage: React.FC = () => {
                         </td>
                         <td className="p-3 text-center font-clinical text-muted-foreground">{item.minimumStock}</td>
                         <td className="p-3 text-right">
-                          {isLow && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-semibold bg-amber-100 dark:bg-amber-950/20 px-2 py-0.5 rounded-full">
-                              <AlertTriangle className="w-3 h-3" /> Sub minim
-                            </span>
-                          )}
+                          <div className="flex items-center justify-end gap-3">
+                            {isLow && (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-semibold bg-amber-100 dark:bg-amber-950/20 px-2 py-0.5 rounded-full">
+                                <AlertTriangle className="w-3 h-3" /> Sub minim
+                              </span>
+                            )}
+                            <button
+                              onClick={() => setItemToDelete(item)}
+                              className="p-1 rounded hover:bg-red-50 hover:text-red-600 text-muted-foreground transition-colors"
+                              title="Șterge articol"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -391,6 +411,40 @@ const InventoryPage: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Item Confirmation Modal */}
+      {itemToDelete && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in" onClick={() => setItemToDelete(null)}>
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 text-red-600 mb-3">
+              <div className="p-2 rounded-full bg-red-100 dark:bg-red-950/40">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <h3 className="text-clinical-lg font-bold text-foreground">Confirmare Ștergere</h3>
+            </div>
+            <p className="text-clinical-sm text-muted-foreground mb-6 leading-relaxed">
+              Ești sigur că dorești să ștergi articolul <strong className="text-foreground font-semibold">{itemToDelete.brand} {itemToDelete.name}</strong> din stoc? Această acțiune va dezactiva articolul din inventar.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setItemToDelete(null)}
+                className="px-4 py-2 rounded-lg border border-border text-clinical-xs font-semibold text-foreground hover:bg-muted transition-colors"
+              >
+                Anulează
+              </button>
+              <button
+                onClick={() => {
+                  deleteStockItem(itemToDelete.id);
+                  setItemToDelete(null);
+                }}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-clinical-xs font-semibold shadow-sm transition-colors"
+              >
+                Șterge Articolul
+              </button>
+            </div>
           </div>
         </div>
       )}

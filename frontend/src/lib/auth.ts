@@ -15,6 +15,8 @@ export const keycloak = new Keycloak({
 interface KeycloakJwtPayload {
   sub: string;
   tenant_id?: string;
+  staff_id?: string;
+  staff_role?: string;
   realm_access?: { roles: string[] };
   permissions?: Record<string, string[]>;
   name?: string;
@@ -53,9 +55,9 @@ async function buildUserInfo(token: string): Promise<UserInfo | null> {
   }
 
   return {
-    staffId: profile.id || claims.staff_id || claims.sub || '',
-    tenantId: (claims as any).tenant_id || '',
-    role: profile.role || (claims as any).staff_role || claims.realm_access?.roles?.[0] || '',
+    staffId: claims.staff_id || profile.id || claims.sub || '',
+    tenantId: claims.tenant_id || '',
+    role: profile.role || claims.staff_role || claims.realm_access?.roles?.[0] || '',
     name: (profile.firstName && profile.lastName) 
       ? `${profile.firstName} ${profile.lastName}`
       : claims.preferred_username || claims.name || 'Utilizator',
@@ -130,13 +132,20 @@ export async function initKeycloak(): Promise<boolean> {
   const store = useAuthStore.getState();
   store.setLoading(true);
   try {
-    const authenticated = await keycloak.init({
-      onLoad: 'check-sso',
-      silentCheckSsoRedirectUri:
-        window.location.origin + '/silent-check-sso.html',
+    const savedToken = localStorage.getItem('kc_token');
+    const savedRefreshToken = localStorage.getItem('kc_refresh_token');
+
+    const initOptions: any = {
       pkceMethod: 'S256',
       checkLoginIframe: false,
-    });
+    };
+
+    if (savedToken) {
+      initOptions.token = savedToken;
+      initOptions.refreshToken = savedRefreshToken || undefined;
+    }
+
+    const authenticated = await keycloak.init(initOptions);
 
     if (authenticated && keycloak.token) {
       store.setToken(keycloak.token, keycloak.refreshToken ?? null);
@@ -164,18 +173,24 @@ export async function initKeycloak(): Promise<boolean> {
 }
 
 export async function getToken(): Promise<string | null> {
-  const localToken = localStorage.getItem('kc_token');
-  if (localToken) return localToken;
-
+  // Always prefer the token managed by the Keycloak SDK (it knows if it's expired)
+  // and can refresh it automatically. Only fall back to localStorage if the SDK
+  // has not been initialized yet (e.g., during the very first app load).
   try {
-    await keycloak.updateToken(30);
-    if (keycloak.token) {
-      useAuthStore.getState().setToken(keycloak.token, keycloak.refreshToken ?? null);
+    if (keycloak.authenticated) {
+      // Ensure the token is still valid for at least 30 more seconds
+      await keycloak.updateToken(30);
+      if (keycloak.token) {
+        useAuthStore.getState().setToken(keycloak.token, keycloak.refreshToken ?? null);
+        return keycloak.token;
+      }
     }
-    return keycloak.token ?? null;
   } catch {
-    return useAuthStore.getState().token;
+    // updateToken throws if the refresh token is also expired — fall through
   }
+
+  // Last resort: return whatever is in the store (may be valid from init)
+  return useAuthStore.getState().token ?? localStorage.getItem('kc_token');
 }
 
 export function getUserInfo(): UserInfo | null {

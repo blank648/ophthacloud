@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuthStore } from '@/stores/authStore';
-import PageHeader from '@/components/PageHeader';
+import AppLayout from '@/components/AppLayout';
 import { UserCircle, Mail, Briefcase, Shield, Key } from 'lucide-react';
 
 const UserProfilePage: React.FC = () => {
@@ -26,10 +26,8 @@ const UserProfilePage: React.FC = () => {
   if (!userInfo) return null;
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background">
-      <PageHeader breadcrumbs={[{ label: 'Acasă', path: '/dashboard' }, { label: 'Profilul Meu' }]} />
-      <div className="flex-1 overflow-auto p-4 md:p-8">
-        <div className="max-w-3xl mx-auto space-y-6">
+    <AppLayout breadcrumbs={[{ label: 'Acasă', path: '/dashboard' }, { label: 'Profilul Meu' }]}>
+      <div className="max-w-3xl mx-auto space-y-6">
           <div className="bg-card border border-border shadow-sm rounded-xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
             <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold shadow-sm">
               {getInitials()}
@@ -83,9 +81,8 @@ const UserProfilePage: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

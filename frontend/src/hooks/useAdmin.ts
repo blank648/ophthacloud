@@ -118,10 +118,14 @@ export function useDeleteEquipment() {
 }
 
 // --- Audit Logs ---
-export function useAuditLogs(params?: PaginatedParams & { entityType?: string; entityId?: string; userId?: string; action?: string; from?: string; to?: string }) {
+export function useAuditLogs(
+  params?: PaginatedParams & { entityType?: string; entityId?: string; userId?: string; action?: string; from?: string; to?: string },
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: adminKeys.auditLogs(params),
     queryFn: () => adminService.listAuditLogs(params),
+    enabled: options?.enabled ?? true,
   });
 }
 

@@ -47,7 +47,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     darkMode: false,
     sidebarCollapsed: false,
     isLoggedIn: !!userInfo,
-    currentClinic: 'Clinica Oftalmologică Demo SRL',
+    currentClinic: '',
   });
 
   useEffect(() => {

@@ -34,3 +34,10 @@ export interface ApiErrorBody {
 export interface ApiErrorResponse {
   error: ApiErrorBody;
 }
+
+export interface PaginatedParams {
+  page?: number;
+  size?: number;
+  sort?: string;
+  direction?: 'asc' | 'desc';
+}

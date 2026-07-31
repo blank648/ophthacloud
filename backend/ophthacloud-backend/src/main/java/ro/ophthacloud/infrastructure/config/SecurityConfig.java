@@ -9,7 +9,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -71,7 +70,7 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
             // ── CSRF: disabled — SPA sends Bearer tokens via Authorization header
-            .csrf(AbstractHttpConfigurer::disable)
+            .csrf(csrf -> csrf.disable())
 
             // ── CORS: frontend origins only ───────────────────────────────────
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -138,7 +137,9 @@ public class SecurityConfig {
                 "http://localhost:5173",          // Vite React dev
                 "http://localhost:8083",          // Playwright baseURL config
                 "https://app.ophthacloud.ro",     // Production frontend
-                "https://portal.ophthacloud.ro"  // Production portal
+                "https://portal.ophthacloud.ro",  // Production portal
+                "tauri://localhost",              // Tauri macOS custom protocol
+                "http://tauri.localhost"          // Tauri Windows custom protocol
         ));
         config.setAllowedMethods(List.of(
                 HttpMethod.GET.name(),

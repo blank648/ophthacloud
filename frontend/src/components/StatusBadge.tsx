@@ -1,6 +1,5 @@
 import React from 'react';
-import { statusLabels, statusStyles, clinicalFlagStyles, appointmentTypeLabels, appointmentTypeColors } from '@/data/demo-data';
-import type { AppointmentStatus, AppointmentType } from '@/data/demo-data';
+import { statusLabels, statusStyles, clinicalFlagStyles } from '@/data/demo-data';
 
 export const AppointmentStatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const normalized = status ? status.toLowerCase() : '';

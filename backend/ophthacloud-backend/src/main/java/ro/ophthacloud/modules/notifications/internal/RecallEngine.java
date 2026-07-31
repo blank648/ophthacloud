@@ -50,7 +50,7 @@ public class RecallEngine {
         // Wait, since we are constrained to the module, we can just fetch all active protocols 
         // (which implicitly have tenant_id) and group them by tenant.
         List<RecallProtocolEntity> activeProtocols = protocolRepository.findAll().stream()
-                .filter(RecallProtocolEntity::getIsActive)
+                .filter(p -> Boolean.TRUE.equals(p.getIsActive()))
                 .toList();
 
         Map<UUID, List<RecallProtocolEntity>> protocolsByTenant = new HashMap<>();

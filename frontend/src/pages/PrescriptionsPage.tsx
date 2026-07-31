@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import AppLayout from '@/components/AppLayout';
 import PrintPreviewModal from '@/components/PrintPreviewModal';
-import { prescriptionStatusStyles, type OpticalOrder } from '@/data/demo-data';
-import { useData } from '@/contexts/DataContext';
+import { prescriptionStatusStyles } from '@/data/demo-data';
 import { Download, ArrowRight, Search, X, RefreshCw } from 'lucide-react';
-import { usePrescriptions } from '@/hooks/usePrescriptions';
+import { usePrescriptions, useCancelPrescription } from '@/hooks/usePrescriptions';
 import { usePatients } from '@/hooks/usePatients';
 import { useCreateOrder } from '@/hooks/useOptical';
 import type { PrescriptionDto, PrescriptionLineDto } from '@/types/prescriptions';
@@ -46,6 +45,7 @@ const translateStatus = (status?: string) => {
 const PrescriptionsPage: React.FC = () => {
   const navigate = useNavigate();
   const { mutateAsync: createOrder } = useCreateOrder();
+  const { mutateAsync: cancelPrescription, isPending: isCancelling } = useCancelPrescription();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedRx, setSelectedRx] = useState<PrescriptionDto | null>(null);
@@ -250,7 +250,21 @@ const PrescriptionsPage: React.FC = () => {
                 <button onClick={() => toast('Reînnoire rețetă inițiată')} className="flex-1 py-2 rounded-lg border border-border text-clinical-sm font-medium flex items-center justify-center gap-1 hover:bg-muted">
                   <RefreshCw className="w-4 h-4"/> Reînnoire
                 </button>
-                <button onClick={() => { toast.error('Rețetă anulată'); setSelectedRx(null); }} className="flex-1 py-2 rounded-lg border border-red-200 text-red-600 text-clinical-sm font-medium hover:bg-red-50">Anulează</button>
+                <button 
+                  disabled={selectedRx.status.toUpperCase() === 'CANCELLED' || isCancelling}
+                  onClick={async () => {
+                    try {
+                      await cancelPrescription(selectedRx.id);
+                      toast.success('Rețetă anulată cu succes');
+                      setSelectedRx(null);
+                    } catch (e: any) {
+                      toast.error('Eroare la anularea rețetei: ' + e.message);
+                    }
+                  }} 
+                  className="flex-1 py-2 rounded-lg border border-red-200 text-red-600 text-clinical-sm font-medium hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {selectedRx.status.toUpperCase() === 'CANCELLED' ? 'Anulată' : isCancelling ? 'Se anulează...' : 'Anulează'}
+                </button>
               </div>
             </div>
           </div>

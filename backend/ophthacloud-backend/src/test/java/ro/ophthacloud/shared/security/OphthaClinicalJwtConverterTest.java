@@ -89,7 +89,7 @@ class OphthaClinicalJwtConverterTest {
 
         var token = converter.convert(jwt);
 
-        assertThat(token.getAuthorities()).extracting(Object::toString)
+        assertThat(token.getAuthorities()).extracting(authority -> authority.getAuthority())
                 .containsExactly("ROLE_DOCTOR");
     }
 

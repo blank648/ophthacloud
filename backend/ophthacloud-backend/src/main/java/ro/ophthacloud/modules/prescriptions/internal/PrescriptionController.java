@@ -7,7 +7,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ro.ophthacloud.modules.prescriptions.PrescriptionsFacade;
@@ -18,7 +17,9 @@ import ro.ophthacloud.modules.prescriptions.enums.PrescriptionStatusType;
 import ro.ophthacloud.shared.api.ApiResponse;
 import ro.ophthacloud.shared.api.PagedApiResponse;
 import ro.ophthacloud.shared.api.PdfDownloadResponse;
+import ro.ophthacloud.shared.security.OphthaPrincipal;
 import ro.ophthacloud.shared.security.SecurityUtils;
+import ro.ophthacloud.shared.security.StaffNameResolver;
 
 import java.util.Map;
 import java.util.UUID;
@@ -32,7 +33,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class PrescriptionController {
 
     private final PrescriptionsFacade facade;
-    private final JdbcTemplate jdbcTemplate;
+    private final StaffNameResolver staffNameResolver;
 
     // ── Authenticated endpoints ───────────────────────────────────────────────
 
@@ -57,22 +58,10 @@ public class PrescriptionController {
     @Operation(summary = "Create a draft prescription")
     public ApiResponse<PrescriptionDto> createPrescription(@Valid @RequestBody CreatePrescriptionRequest request) {
         UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
-        ro.ophthacloud.shared.security.OphthaPrincipal principal = SecurityUtils.currentPrincipal();
+        OphthaPrincipal principal = SecurityUtils.currentPrincipal();
         UUID issuedById = UUID.fromString(principal.staffId() != null ? principal.staffId() : principal.keycloakUserId());
-        
-        String issuedByName = "Dr. " + principal.staffRole();
-        try {
-            String realName = jdbcTemplate.queryForObject(
-                "SELECT first_name || ' ' || last_name FROM staff_members WHERE tenant_id = ? AND (id = ? OR keycloak_user_id = ?)",
-                String.class,
-                tenantId,
-                issuedById,
-                principal.keycloakUserId() != null ? UUID.fromString(principal.keycloakUserId()) : issuedById
-            );
-            if (realName != null && !realName.isBlank()) {
-                issuedByName = "Dr. " + realName;
-            }
-        } catch (Exception ignored) {}
+
+        String issuedByName = staffNameResolver.resolveDoctorName(principal, tenantId);
 
         PrescriptionDto created = facade.createPrescription(tenantId, issuedById, issuedByName, request);
         return ApiResponse.of(created);

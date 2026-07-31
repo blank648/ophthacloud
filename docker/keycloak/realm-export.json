@@ -10,14 +10,12 @@
   "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
-
   "accessTokenLifespan": 900,
   "ssoSessionIdleTimeout": 28800,
   "ssoSessionMaxLifespan": 43200,
   "offlineSessionIdleTimeout": 2592000,
   "clientSessionIdleTimeout": 28800,
   "clientSessionMaxLifespan": 43200,
-
   "roles": {
     "realm": [
       {
@@ -32,7 +30,6 @@
       }
     ]
   },
-
   "clients": [
     {
       "clientId": "ophthacloud-backend",
@@ -45,14 +42,16 @@
       "authorizationServicesEnabled": false,
       "standardFlowEnabled": false,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "dev-backend-secret-change-in-prod",
       "redirectUris": [
         "http://localhost:3000/*",
-        "https://app.ophthacloud.ro/*"
+        "https://app.ophthacloud.ro/*", "tauri://localhost/*", "http://tauri.localhost/*"
       ],
-      "webOrigins": ["+"],
+      "webOrigins": [
+        "+"
+      ],
       "defaultClientScopes": [
         "openid",
         "profile",
@@ -71,19 +70,25 @@
       "serviceAccountsEnabled": false,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "redirectUris": [
         "http://localhost:3000/*",
-        "https://app.ophthacloud.ro/*"
+        "http://localhost:5173/*",
+        "https://app.ophthacloud.ro/*", "tauri://localhost/*", "http://tauri.localhost/*"
       ],
-      "webOrigins": ["+"],
+      "webOrigins": [
+        "+"
+      ],
       "defaultClientScopes": [
         "openid",
         "profile",
         "email",
         "ophthacloud-claims"
       ],
-      "optionalClientScopes": []
+      "optionalClientScopes": [],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:5173/*##http://localhost:3000/*"
+      }
     },
     {
       "clientId": "ophthacloud-portal",
@@ -95,12 +100,14 @@
       "serviceAccountsEnabled": false,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "redirectUris": [
         "http://localhost:3001/*",
         "https://portal.ophthacloud.ro/*"
       ],
-      "webOrigins": ["+"],
+      "webOrigins": [
+        "+"
+      ],
       "defaultClientScopes": [
         "openid",
         "profile",
@@ -110,7 +117,6 @@
       "optionalClientScopes": []
     }
   ],
-
   "clientScopes": [
     {
       "name": "ophthacloud-claims",
@@ -176,7 +182,6 @@
       ]
     }
   ],
-
   "users": [
     {
       "username": "dr.test@clinica-demo.ro",
@@ -192,12 +197,22 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["TENANT_MEMBER"],
+      "realmRoles": [
+        "TENANT_MEMBER"
+      ],
       "attributes": {
-        "tenant_id":   ["11111111-0000-0000-0000-000000000001"],
-        "staff_id":    ["22222222-0000-0000-0000-000000000001"],
-        "staff_role":  ["DOCTOR"],
-        "permissions_json": ["{\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"emr\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":true,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":true,\"export\":true},\"optical\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"notifications\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"admin\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false}}"]
+        "tenant_id": [
+          "11111111-0000-0000-0000-000000000001"
+        ],
+        "staff_id": [
+          "22222222-0000-0000-0000-000000000001"
+        ],
+        "staff_role": [
+          "DOCTOR"
+        ],
+        "permissions_json": [
+          "{\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"emr\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":true,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":true,\"export\":true},\"optical\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"notifications\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"admin\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false}}"
+        ]
       }
     },
     {
@@ -214,25 +229,290 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["TENANT_MEMBER"],
+      "realmRoles": [
+        "TENANT_MEMBER"
+      ],
       "attributes": {
-        "tenant_id":  ["11111111-0000-0000-0000-000000000001"],
-        "staff_id":   ["22222222-0000-0000-0000-000000000002"],
-        "staff_role": ["CLINIC_ADMIN"],
-        "permissions_json": ["{\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"emr\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"optical\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"notifications\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"admin\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true}}"]
+        "tenant_id": [
+          "11111111-0000-0000-0000-000000000001"
+        ],
+        "staff_id": [
+          "22222222-0000-0000-0000-000000000002"
+        ],
+        "staff_role": [
+          "CLINIC_ADMIN"
+        ],
+        "permissions_json": [
+          "{\"dashboard\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"emr\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"optical\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"notifications\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"portal\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"admin\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true}}"
+        ]
+      }
+    },
+    {
+      "id": "ef416065-ebd1-4317-bbfd-349586c665e4",
+      "username": "idobre@visionmed.com",
+      "email": "idobre@visionmed.com",
+      "firstName": "Ioana",
+      "lastName": "Dobre",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "TENANT_MEMBER"
+      ],
+      "attributes": {
+        "tenant_id": [
+          "11111111-0000-0000-0000-000000000001"
+        ],
+        "staff_id": [
+          "77a158c9-08d2-4ee7-b7b4-99f7d348cc88"
+        ],
+        "staff_role": [
+          "DOCTOR"
+        ],
+        "permissions_json": [
+          "{\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"emr\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":true,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":true,\"export\":true},\"optical\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"notifications\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"admin\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false}}"
+        ]
+      }
+    },
+    {
+      "id": "ef416065-ebd1-4317-bbfd-349586c665e5",
+      "username": "idobrescu@visionmed.com",
+      "email": "idobrescu@visionmed.com",
+      "firstName": "Vasile",
+      "lastName": "Dobrescu",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "TENANT_MEMBER"
+      ],
+      "attributes": {
+        "tenant_id": [
+          "11111111-0000-0000-0000-000000000001"
+        ],
+        "staff_id": [
+          "22222222-1111-1111-1111-222222222222"
+        ],
+        "staff_role": [
+          "DOCTOR"
+        ],
+        "permissions_json": [
+          "{\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"emr\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":true,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":false,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":false,\"sign\":true,\"export\":true},\"optical\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"notifications\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"admin\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false}}"
+        ]
+      }
+    },
+    {
+      "id": "7cee9c8a-da28-4d1c-96c3-5f646a4b9454",
+      "username": "andrei_ionescu@ophthacloud.com",
+      "email": "andrei_ionescu@ophthacloud.com",
+      "firstName": "Andrei",
+      "lastName": "Ionescu",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "TENANT_MEMBER"
+      ],
+      "attributes": {
+        "tenant_id": [
+          "11111111-0000-0000-0000-000000000001"
+        ],
+        "staff_id": [
+          "bc3f22c3-c9f8-445f-b437-93b4c7c4c049"
+        ],
+        "staff_role": [
+          "RECEPTIONIST"
+        ],
+        "permissions_json": [
+          "{\"dashboard\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":false},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"emr\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":false,\"export\":true},\"optical\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"notifications\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"portal\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"admin\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false}}"
+        ]
+      }
+    },
+    {
+      "id": "6de87f7f-1beb-4c98-a6c5-042ac02ce5a6",
+      "username": "dmarcel@ophthacloud.com",
+      "email": "dmarcel@ophthacloud.com",
+      "firstName": "Marcel",
+      "lastName": "Dima",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "TENANT_MEMBER"
+      ],
+      "attributes": {
+        "tenant_id": [
+          "11111111-0000-0000-0000-000000000001"
+        ],
+        "staff_id": [
+          "60e3448f-7f02-4522-b497-1df5d3f5e374"
+        ],
+        "staff_role": [
+          "OPTICAL_TECHNICIAN"
+        ],
+        "permissions_json": [
+          "{\"dashboard\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"emr\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"optical\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"notifications\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"portal\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"admin\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false}}"
+        ]
+      }
+    },
+    {
+      "id": "91b8c287-336e-40fc-9390-d60a9cd5d9c6",
+      "username": "mathias54@ophthacloud.com",
+      "email": "mathias54@ophthacloud.com",
+      "firstName": "Mathias",
+      "lastName": "Levente",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "TENANT_MEMBER"
+      ],
+      "attributes": {
+        "tenant_id": [
+          "11111111-0000-0000-0000-000000000001"
+        ],
+        "staff_id": [
+          "3d3eda78-e4b9-4e0c-af59-09833264ca3a"
+        ],
+        "staff_role": [
+          "MANAGER"
+        ],
+        "permissions_json": [
+          "{\"dashboard\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"emr\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"investigations\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":true,\"export\":true},\"optical\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true},\"notifications\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"portal\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"admin\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true}}"
+        ]
+      }
+    },
+    {
+      "id": "3ea80444-b946-49d5-8706-94422cad6533",
+      "username": "ioan01@ophthacloud.com",
+      "email": "ioan01@ophthacloud.com",
+      "firstName": "Ioan",
+      "lastName": "Maria",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "TENANT_MEMBER"
+      ],
+      "attributes": {
+        "tenant_id": [
+          "11111111-0000-0000-0000-000000000001"
+        ],
+        "staff_id": [
+          "5c2e7c58-1880-4035-a795-1a278330953c"
+        ],
+        "staff_role": [
+          "OPTOMETRIST"
+        ],
+        "permissions_json": [
+          "{\"dashboard\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"emr\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"optical\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"notifications\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"portal\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"admin\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true}}"
+        ]
+      }
+    },
+    {
+      "id": "60362f82-7903-4cb0-8463-8c02750b38c3",
+      "username": "vasile.popa@ophthacloud.com",
+      "email": "vasile.popa@ophthacloud.com",
+      "firstName": "Vasile",
+      "lastName": "Popa",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "TENANT_MEMBER"
+      ],
+      "attributes": {
+        "tenant_id": [
+          "11111111-0000-0000-0000-000000000001"
+        ],
+        "staff_id": [
+          "6c02d194-5cba-4348-b140-3dca6f81ba9d"
+        ],
+        "staff_role": [
+          "OPTOMETRIST"
+        ],
+        "permissions_json": [
+          "{\"dashboard\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"patients\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"appointments\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"emr\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"investigations\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"prescriptions\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"optical\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"notifications\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"portal\":{\"view\":false,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":false},\"reports\":{\"view\":true,\"create\":true,\"edit\":true,\"delete\":true,\"sign\":true,\"export\":true},\"admin\":{\"view\":true,\"create\":false,\"edit\":false,\"delete\":false,\"sign\":false,\"export\":true}}"
+        ]
+      }
+    },
+    {
+      "username": "service-account-ophthacloud-backend",
+      "enabled": true,
+      "serviceAccountClientId": "ophthacloud-backend",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users",
+          "view-realm"
+        ]
       }
     }
   ],
-
   "browserSecurityHeaders": {
     "contentTypeOptions": "nosniff",
     "xRobotsTag": "none",
     "xFrameOptions": "SAMEORIGIN",
-    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self' http://localhost:5173 http://localhost:3000; object-src 'none';",
     "strictTransportSecurity": "max-age=31536000; includeSubDomains"
   },
-
   "smtpServer": {},
   "eventsEnabled": false,
-  "adminEventsEnabled": false
+  "adminEventsEnabled": false,
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}],\"unmanagedAttributePolicy\":\"ENABLED\"}"
+          ]
+        }
+      }
+    ]
+  }
 }

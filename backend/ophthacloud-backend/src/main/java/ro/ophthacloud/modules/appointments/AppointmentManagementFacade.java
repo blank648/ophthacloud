@@ -63,7 +63,7 @@ public class AppointmentManagementFacade {
                 SecurityUtils.currentTenantId(), from, to, doctorId, patientId);
         
         java.util.Map<UUID, AppointmentTypeEntity> typeMap = appointmentTypeRepository.findAllByIsActiveTrue()
-                .stream().collect(java.util.stream.Collectors.toMap(AppointmentTypeEntity::getId, t -> t));
+                .stream().collect(java.util.stream.Collectors.toMap(t -> t.getId(), t -> t));
 
         return appointmentRepository.findCalendarRange(from, to, doctorId, patientId)
                 .stream()
@@ -255,7 +255,7 @@ public class AppointmentManagementFacade {
     @Transactional
     public AppointmentTypeDto updateType(UUID id, AppointmentTypeRequest request) {
         AppointmentTypeEntity entity = appointmentTypeRepository.findById(id)
-                .filter(AppointmentTypeEntity::isActive)
+                .filter(t -> t.isActive())
                 .orElseThrow(() -> new AppointmentTypeNotFoundException(id));
         applyTypeRequest(entity, request);
         AppointmentTypeEntity saved = appointmentTypeRepository.save(entity);
@@ -359,7 +359,7 @@ public class AppointmentManagementFacade {
             avatar = patient.avatarUrl();
             if (patient.medicalHistory() != null && patient.medicalHistory().activeDiagnoses() != null) {
                 activeDiagnosisFlags = patient.medicalHistory().activeDiagnoses().stream()
-                        .map(ro.ophthacloud.modules.patients.dto.ActiveDiagnosis::icd10Code)
+                        .map(diag -> diag.icd10Code())
                         .toList();
             }
         } catch (Exception ex) {

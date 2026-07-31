@@ -4,7 +4,7 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AppProvider, useApp } from "@/contexts/AppContext";
+import { AppProvider } from "@/contexts/AppContext";
 import { DataProvider } from "@/contexts/DataContext";
 import { queryClient } from "@/lib/queryClient";
 import { ApiErrorBoundary } from "@/components/ApiErrorBoundary";
@@ -33,6 +33,7 @@ import AuditLogPage from "./pages/AuditLogPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import NotFound from "./pages/NotFound";
 import UserProfilePage from "./pages/UserProfilePage";
+import PopupLogin from "./pages/PopupLogin";
 
 const AppRoutes = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -51,6 +52,7 @@ const AppRoutes = () => {
   if (!isAuthenticated) {
     return (
       <Routes>
+        <Route path="/popup-login" element={<PopupLogin />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="*" element={<LoginPage />} />
       </Routes>

@@ -1,4 +1,4 @@
 @org.springframework.modulith.ApplicationModule(
-    allowedDependencies = {"shared", "modules.patients", "modules.appointments", "infrastructure"}
+    allowedDependencies = {"shared", "infrastructure"}
 )
 package ro.ophthacloud.modules.emr;

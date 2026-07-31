@@ -78,6 +78,14 @@ public class ReportsController {
         return ApiResponse.of(facade.getPatientDemographics(tenantId));
     }
 
+    @GetMapping("/clinical-stats")
+    @Operation(summary = "Get clinical statistics", description = "Real VA (post-refraction) distribution and consultation duration per doctor")
+    @PreAuthorize("hasPermission('reports', 'MODULE', 'VIEW')")
+    public ApiResponse<ClinicalStatisticsDto> getClinicalStatistics() {
+        UUID tenantId = UUID.fromString(SecurityUtils.currentTenantId());
+        return ApiResponse.of(facade.getClinicalStatistics(tenantId));
+    }
+
     private void validateDateRange(LocalDate from, LocalDate to) {
         if (from.isAfter(to)) {
             throw new IllegalArgumentException("Start date must be before or equal to end date");

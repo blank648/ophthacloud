@@ -15,4 +15,7 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, UUID> {
 
     @Query("SELECT COUNT(i) FROM InvoiceEntity i WHERE i.tenantId = :tenantId AND EXTRACT(YEAR FROM i.createdAt) = :year")
     long countByTenantIdAndYear(@Param("tenantId") UUID tenantId, @Param("year") int year);
+
+    @Query("SELECT MAX(i.invoiceNumber) FROM InvoiceEntity i WHERE i.tenantId = :tenantId AND i.invoiceNumber LIKE :prefix")
+    String findMaxInvoiceNumberByTenantIdAndPrefix(@Param("tenantId") UUID tenantId, @Param("prefix") String prefix);
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, Save } from 'lucide-react';
 import { usePermissions, useUpdatePermissions } from '@/hooks/useAdmin';
-import type { StaffRole, PermissionMatrixDto } from '@/types/admin';
+import type { StaffRole } from '@/types/admin';
 import { toast } from 'sonner';
 
 const ROLES: { label: string, value: StaffRole }[] = [

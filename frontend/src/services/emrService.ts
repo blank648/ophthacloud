@@ -1,5 +1,4 @@
 import { apiGet, apiGetPaged, apiPost, apiPut, apiPatch } from '@/lib/apiClient';
-import type { PagedApiResponse } from '@/types/api';
 import type {
   ConsultationDto,
   ConsultationSectionDto,

@@ -1,0 +1,77 @@
+-- V33__seed_rbac_matrix.sql
+-- Seed the default RBAC permission matrix for the demo tenant.
+--
+-- Root cause fixed: tenant_role_module_permissions was created (V1/V22) but never seeded,
+-- so the Settings "Matrice Permisiuni" started empty and every role resolved to deny-all.
+-- New staff therefore received an empty permissions_json and were redirected to /unauthorized
+-- (e.g. an OPTOMETRIST could not start an EMR consultation).
+--
+-- Values follow GUIDE_05 §6. OPTOMETRIST is granted clinical access (incl. emr view/create/edit,
+-- no SIGN) so optometrists can perform refraction and open consultations as intended.
+-- The clinic admin can adjust any of these from the Settings matrix afterwards.
+
+INSERT INTO tenant_role_module_permissions
+    (tenant_id, role, module_code, can_view, can_create, can_edit, can_delete, can_sign, can_export, version)
+VALUES
+    -- ── CLINIC_ADMIN ──────────────────────────────────────────────────────────
+    ('11111111-0000-0000-0000-000000000001','CLINIC_ADMIN','dashboard',      TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','CLINIC_ADMIN','patients',       TRUE, TRUE, TRUE, TRUE, FALSE,TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','CLINIC_ADMIN','appointments',   TRUE, TRUE, TRUE, TRUE, FALSE,TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','CLINIC_ADMIN','emr',            TRUE, TRUE, TRUE, FALSE,TRUE, TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','CLINIC_ADMIN','investigations', TRUE, TRUE, TRUE, TRUE, FALSE,TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','CLINIC_ADMIN','prescriptions',  TRUE, TRUE, TRUE, FALSE,TRUE, TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','CLINIC_ADMIN','optical',        TRUE, TRUE, TRUE, TRUE, FALSE,TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','CLINIC_ADMIN','notifications',  TRUE, TRUE, TRUE, TRUE, FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','CLINIC_ADMIN','reports',        TRUE, FALSE,FALSE,FALSE,FALSE,TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','CLINIC_ADMIN','admin',          TRUE, TRUE, TRUE, TRUE, FALSE,TRUE, 0),
+
+    -- ── DOCTOR ────────────────────────────────────────────────────────────────
+    ('11111111-0000-0000-0000-000000000001','DOCTOR','dashboard',      TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','DOCTOR','patients',       TRUE, TRUE, TRUE, FALSE,FALSE,TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','DOCTOR','appointments',   TRUE, TRUE, TRUE, TRUE, FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','DOCTOR','emr',            TRUE, TRUE, TRUE, FALSE,TRUE, TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','DOCTOR','investigations', TRUE, TRUE, TRUE, FALSE,FALSE,TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','DOCTOR','prescriptions',  TRUE, TRUE, FALSE,FALSE,TRUE, TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','DOCTOR','optical',        TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','DOCTOR','notifications',  TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','DOCTOR','reports',        TRUE, FALSE,FALSE,FALSE,FALSE,TRUE, 0),
+
+    -- ── OPTOMETRIST (clinical: refraction + EMR create/edit, no SIGN) ──────────
+    ('11111111-0000-0000-0000-000000000001','OPTOMETRIST','dashboard',      TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','OPTOMETRIST','patients',       TRUE, TRUE, TRUE, FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','OPTOMETRIST','appointments',   TRUE, TRUE, TRUE, FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','OPTOMETRIST','emr',            TRUE, TRUE, TRUE, FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','OPTOMETRIST','investigations', TRUE, TRUE, TRUE, FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','OPTOMETRIST','prescriptions',  TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','OPTOMETRIST','optical',        TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','OPTOMETRIST','reports',        TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+
+    -- ── NURSE ─────────────────────────────────────────────────────────────────
+    ('11111111-0000-0000-0000-000000000001','NURSE','dashboard',      TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','NURSE','patients',       TRUE, TRUE, TRUE, FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','NURSE','appointments',   TRUE, TRUE, TRUE, FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','NURSE','emr',            TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','NURSE','investigations', TRUE, TRUE, TRUE, FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','NURSE','prescriptions',  TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+
+    -- ── RECEPTIONIST ──────────────────────────────────────────────────────────
+    ('11111111-0000-0000-0000-000000000001','RECEPTIONIST','dashboard',     TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','RECEPTIONIST','patients',      TRUE, TRUE, TRUE, FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','RECEPTIONIST','appointments',  TRUE, TRUE, TRUE, TRUE, FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','RECEPTIONIST','optical',       TRUE, TRUE, TRUE, FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','RECEPTIONIST','notifications', TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+
+    -- ── OPTICAL_TECHNICIAN (optician) ─────────────────────────────────────────
+    ('11111111-0000-0000-0000-000000000001','OPTICAL_TECHNICIAN','dashboard',     TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','OPTICAL_TECHNICIAN','patients',      TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','OPTICAL_TECHNICIAN','prescriptions', TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','OPTICAL_TECHNICIAN','optical',       TRUE, TRUE, TRUE, FALSE,FALSE,FALSE,0),
+
+    -- ── MANAGER ───────────────────────────────────────────────────────────────
+    ('11111111-0000-0000-0000-000000000001','MANAGER','dashboard',     TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','MANAGER','patients',      TRUE, FALSE,FALSE,FALSE,FALSE,TRUE, 0),
+    ('11111111-0000-0000-0000-000000000001','MANAGER','appointments',  TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','MANAGER','optical',       TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','MANAGER','notifications', TRUE, FALSE,FALSE,FALSE,FALSE,FALSE,0),
+    ('11111111-0000-0000-0000-000000000001','MANAGER','reports',       TRUE, FALSE,FALSE,FALSE,FALSE,TRUE, 0)
+ON CONFLICT (tenant_id, role, module_code) DO NOTHING;

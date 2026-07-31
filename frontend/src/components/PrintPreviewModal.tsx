@@ -3,6 +3,8 @@ import { X, Printer, Download } from 'lucide-react';
 import OphthaLogo from '@/components/OphthaLogo';
 import { useClinicSettings } from '@/hooks/useAdmin';
 
+import { printElement, downloadPDF } from '@/lib/printUtils';
+
 interface PrintPreviewModalProps {
   open: boolean;
   onClose: () => void;
@@ -23,7 +25,13 @@ const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({
   const { data: clinicData } = useClinicSettings();
   if (!open) return null;
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    printElement('#print-modal-content', title);
+  };
+
+  const handleDownload = () => {
+    downloadPDF('#print-modal-content', title);
+  };
 
   return (
     <div
@@ -48,7 +56,7 @@ const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({
               <Printer className="w-3.5 h-3.5" /> Tipărește
             </button>
             <button
-              onClick={handlePrint}
+              onClick={handleDownload}
               className="px-3 py-1.5 rounded-lg border border-gray-300 text-clinical-xs font-medium flex items-center gap-1 hover:bg-gray-50"
             >
               <Download className="w-3.5 h-3.5" /> Descarcă PDF
@@ -63,7 +71,7 @@ const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({
         </div>
 
         {/* A4 sheet */}
-        <div className="px-12 py-10 print:px-16 print:py-12 print-area">
+        <div className="px-12 py-10 print:px-16 print:py-12 print-area" id="print-modal-content">
           {/* Header */}
           <header className="flex items-start justify-between pb-5 border-b-2 border-gray-300 mb-6">
             <div className="flex items-center gap-3">

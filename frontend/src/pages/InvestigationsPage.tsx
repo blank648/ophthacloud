@@ -485,6 +485,17 @@ const InvestigationsPage: React.FC = () => {
                           href={file.downloadUrl} 
                           target="_blank" 
                           rel="noreferrer"
+                          onClick={async (e) => {
+                            if ((window as any).__TAURI_INTERNALS__) {
+                              e.preventDefault();
+                              try {
+                                const { open } = await import('@tauri-apps/plugin-shell');
+                                await open(file.downloadUrl);
+                              } catch (err) {
+                                window.open(file.downloadUrl, '_blank');
+                              }
+                            }
+                          }}
                           className="p-1 rounded bg-primary text-white hover:bg-primary/95 flex items-center gap-0.5 font-sans font-semibold text-[10px]"
                         >
                           <FileDown className="w-3.5 h-3.5" /> Descărcare

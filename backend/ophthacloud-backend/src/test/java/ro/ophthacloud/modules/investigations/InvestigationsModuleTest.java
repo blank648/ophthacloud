@@ -10,6 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import ro.ophthacloud.OphthacloudBackendApplication;
 import ro.ophthacloud.modules.investigations.event.InvestigationResultAvailableEvent;
+import ro.ophthacloud.shared.security.StaffNameResolver;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -32,6 +33,9 @@ class InvestigationsModuleTest {
 
     @MockitoBean
     private MinioClient minioClient;
+
+    @MockitoBean
+    private StaffNameResolver staffNameResolver;
 
     // ── Test 1: Module structure is valid ─────────────────────────────────────
 

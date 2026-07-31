@@ -53,4 +53,12 @@ public class StockController {
     public ApiResponse<StockItemDto> createStockItem(@RequestBody @Valid CreateStockItemRequest request) {
         return ApiResponse.of(stockService.createItem(TenantContext.require(), request));
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasPermission('optical', 'MODULE', 'EDIT')")
+    @Operation(summary = "Delete a stock item")
+    public void deleteStockItem(@PathVariable UUID id) {
+        stockService.deleteItem(TenantContext.require(), id);
+    }
 }

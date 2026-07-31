@@ -30,9 +30,15 @@ export interface RevenueSeriesData {
   total: number;
 }
 
+export interface DoctorRevenueData {
+  doctorName: string;
+  total: number;
+}
+
 export interface RevenueStatisticsDto {
   groupBy: string;
   series: RevenueSeriesData[];
+  byDoctor: DoctorRevenueData[];
 }
 
 export interface IopTrendData {
@@ -66,6 +72,21 @@ export interface PatientDemographicsDto {
   registrationTrend?: RegistrationTrendData[];
 }
 
+export interface VaDistributionData {
+  range: string;
+  count: number;
+}
+
+export interface DoctorDurationData {
+  doctorName: string;
+  avgMinutes: number;
+}
+
+export interface ClinicalStatisticsDto {
+  vaDistribution: VaDistributionData[];
+  consultationDurationByDoctor: DoctorDurationData[];
+}
+
 export const reportsService = {
   getDashboardKpis: async (): Promise<DashboardKpisDto> => {
     return apiGet<DashboardKpisDto>('/api/v1/reports/dashboard-kpis');
@@ -85,5 +106,9 @@ export const reportsService = {
 
   getPatientDemographics: async (): Promise<PatientDemographicsDto> => {
     return apiGet<PatientDemographicsDto>('/api/v1/reports/patients/demographics');
+  },
+
+  getClinicalStatistics: async (): Promise<ClinicalStatisticsDto> => {
+    return apiGet<ClinicalStatisticsDto>('/api/v1/reports/clinical-stats');
   }
 };

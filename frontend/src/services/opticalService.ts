@@ -1,4 +1,4 @@
-import { apiGet, apiGetPaged, apiPost, apiPatch, apiPut } from '@/lib/apiClient';
+import { apiGet, apiGetPaged, apiPost, apiPatch, apiPut, apiDelete } from '@/lib/apiClient';
 import type {
   CreateOrderRequest,
   InvoiceDto,
@@ -48,5 +48,9 @@ export const opticalService = {
 
   listServices() {
     return apiGet<ServiceCatalogDto[]>('/api/v1/optical/services');
+  },
+
+  deleteStockItem(id: string) {
+    return apiDelete(`/api/v1/optical/stock/${id}`);
   },
 };

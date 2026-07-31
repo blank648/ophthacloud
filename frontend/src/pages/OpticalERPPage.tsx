@@ -54,6 +54,8 @@ const OpticalERPPage: React.FC = () => {
   const [selected, setSelected] = useState<OpticalOrderDto | null>(null);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [dragItem, setDragItem] = useState<string | null>(null);
+  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   const [localQc, setLocalQc] = useState<QcResultDto>({
     valuesChecked: false,
@@ -208,17 +210,18 @@ const OpticalERPPage: React.FC = () => {
 
   const handleCancelOrder = () => {
     if (!selected) return;
-    const reason = window.prompt("Introdu motivul anulării comenzii:");
-    if (reason === null) return;
-    if (!reason.trim()) {
-      toast.error("Motivul anulării este obligatoriu!");
-      return;
-    }
+    setCancelOrderId(selected.id);
+    setCancelReason('');
+  };
+
+  const handleConfirmCancelOrder = () => {
+    if (!cancelOrderId || !cancelReason.trim()) return;
     updateStageMutation.mutate({
-      id: selected.id,
-      data: { newStage: 'CANCELLED', cancellationReason: reason }
+      id: cancelOrderId,
+      data: { newStage: 'CANCELLED', cancellationReason: cancelReason }
     }, {
       onSuccess: () => {
+        setCancelOrderId(null);
         setSelected(null);
         toast.success('Comandă anulată cu succes');
       },
@@ -503,6 +506,56 @@ const OpticalERPPage: React.FC = () => {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Cancel Order Dialog */}
+      {cancelOrderId && (
+        <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setCancelOrderId(null)}>
+          <div className="bg-card rounded-2xl border border-border shadow-2xl max-w-md w-full overflow-hidden flex flex-col animate-in scale-in duration-300" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+              <h2 className="text-clinical-md font-bold flex items-center gap-2 text-red-600">
+                <Ban className="w-5 h-5" /> Anulare Comandă Optică
+              </h2>
+              <button onClick={() => setCancelOrderId(null)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-clinical-sm text-muted-foreground">
+                Te rugăm să introduci motivul pentru care anulezi această comandă. Această acțiune este ireversibilă.
+              </p>
+              <div className="space-y-1">
+                <label className="text-clinical-xs font-semibold text-muted-foreground clinical-label">Motivul Anulării *</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={cancelReason}
+                  onChange={e => setCancelReason(e.target.value)}
+                  placeholder="ex: Pacientul s-a răzgândit / Dioptrii greșite în rețetă..."
+                  className="w-full rounded-lg border border-border px-3 py-2 text-clinical-sm bg-background focus:ring-red-500 focus:border-red-500 min-h-[80px]"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-border flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCancelOrderId(null)}
+                  className="px-4 py-2 rounded-lg border border-border text-clinical-sm font-semibold hover:bg-muted/50"
+                >
+                  Înapoi
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmCancelOrder}
+                  disabled={!cancelReason.trim()}
+                  className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-clinical-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  Confirmă Anularea
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -326,8 +326,8 @@ public class KpiQueryRepository {
         // Top Diagnoses (simplified, counting occurrences of diagnosis_code in medical history)
         String diagnosisSql = """
             SELECT 
-                diag->>'icd10_code' as code, 
-                diag->>'icd10_name' as name, 
+                diag->>'icd10Code' as code, 
+                diag->>'icd10Name' as name, 
                 COUNT(*) as cnt
             FROM patient_medical_history pmh,
                  jsonb_array_elements(COALESCE(pmh.active_diagnoses, '[]'::jsonb)) diag
@@ -359,5 +359,78 @@ public class KpiQueryRepository {
         ), tenantId);
 
         return new PatientDemographicsDto(ageDist, genderDist, topDiagnoses, regTrend);
+    }
+
+    // ── Clinical statistics (real data) ──────────────────────────────────────
+
+    /**
+     * Best-corrected visual acuity (post-refraction) distribution, derived from Section A
+     * of all SIGNED consultations. Counts both eyes (OD + OS) per VA value.
+     */
+    public List<ClinicalStatisticsDto.VaDistributionData> getVaDistribution(UUID tenantId) {
+        String sql = """
+            SELECT va, COUNT(*) AS cnt
+            FROM (
+                SELECT cs.section_data -> 'od' ->> 'bcva' AS va
+                FROM consultation_sections cs
+                JOIN consultations c ON cs.consultation_id = c.id
+                WHERE c.tenant_id = ? AND c.status = 'SIGNED' AND cs.section_code = 'A'
+                UNION ALL
+                SELECT cs.section_data -> 'os' ->> 'bcva' AS va
+                FROM consultation_sections cs
+                JOIN consultations c ON cs.consultation_id = c.id
+                WHERE c.tenant_id = ? AND c.status = 'SIGNED' AND cs.section_code = 'A'
+            ) t
+            WHERE va IS NOT NULL AND va <> '' AND va <> '--'
+            GROUP BY va
+            ORDER BY cnt DESC
+        """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new ClinicalStatisticsDto.VaDistributionData(
+                rs.getString("va"),
+                rs.getLong("cnt")
+        ), tenantId, tenantId);
+    }
+
+    /**
+     * Average consultation duration per doctor — time from the consultation being opened
+     * (created_at) to being signed (signed_at), for SIGNED consultations. Negative/zero spans
+     * (e.g. from imported/seeded rows) are excluded so only real durations are reported.
+     */
+    public List<ClinicalStatisticsDto.DoctorDurationData> getConsultationDurationByDoctor(UUID tenantId) {
+        String sql = """
+            SELECT doctor_name,
+                   ROUND(AVG(EXTRACT(EPOCH FROM (signed_at - created_at)) / 60.0)::numeric, 1) AS avg_min
+            FROM consultations
+            WHERE tenant_id = ?
+              AND status = 'SIGNED'
+              AND signed_at IS NOT NULL
+              AND signed_at > created_at
+            GROUP BY doctor_name
+            ORDER BY avg_min DESC
+        """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new ClinicalStatisticsDto.DoctorDurationData(
+                rs.getString("doctor_name"),
+                rs.getBigDecimal("avg_min")
+        ), tenantId);
+    }
+
+    public List<RevenueStatisticsDto.DoctorRevenueData> getRevenueByDoctor(UUID tenantId, LocalDate from, LocalDate to) {
+        String sql = """
+            SELECT 
+                COALESCE(c.doctor_name, 'Optică / Alții') as doctor_name,
+                SUM(i.total) as total_rev
+            FROM invoices i
+            LEFT JOIN consultations c ON i.consultation_id = c.id
+            WHERE i.tenant_id = ?
+              AND i.status = 'PAID'
+              AND DATE(i.paid_at) >= ?
+              AND DATE(i.paid_at) <= ?
+            GROUP BY doctor_name
+            ORDER BY total_rev DESC
+        """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new RevenueStatisticsDto.DoctorRevenueData(
+                rs.getString("doctor_name"),
+                rs.getBigDecimal("total_rev")
+        ), tenantId, from, to);
     }
 }

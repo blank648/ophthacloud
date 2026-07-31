@@ -42,10 +42,23 @@ public record PatientDto(
         String notes,
         String avatarUrl,
         MedicalHistoryDto medicalHistory,
+        PatientStatisticsDto statistics,
         Instant createdAt,
         Instant updatedAt
 ) {
+    public record PatientStatisticsDto(
+            int totalConsultations,
+            int totalPrescriptions,
+            int totalInvestigations,
+            int totalOpticalOrders,
+            LocalDate lastVisitDate
+    ) {}
+
     public static PatientDto from(PatientEntity p) {
+        return from(p, null);
+    }
+
+    public static PatientDto from(PatientEntity p, PatientStatisticsDto statistics) {
         int age = Period.between(p.getDateOfBirth(), LocalDate.now()).getYears();
         MedicalHistoryDto history = (p.getMedicalHistory() != null)
                 ? MedicalHistoryDto.from(p.getMedicalHistory())
@@ -79,6 +92,7 @@ public record PatientDto(
                 p.getNotes(),
                 p.getAvatarUrl(),
                 history,
+                statistics,
                 p.getCreatedAt(),
                 p.getUpdatedAt()
         );

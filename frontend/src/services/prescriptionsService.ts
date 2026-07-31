@@ -1,5 +1,4 @@
 import { apiGet, apiGetPaged, apiPost } from '@/lib/apiClient';
-import type { PagedApiResponse } from '@/types/api';
 import type {
   CreatePrescriptionRequest,
   PrescriptionDto,
@@ -23,6 +22,10 @@ export const prescriptionsService = {
 
   signPrescription(id: string) {
     return apiPost<PrescriptionDto>(`${BASE}/${id}/sign`, { signatureConfirmation: true });
+  },
+
+  cancelPrescription(id: string) {
+    return apiPost<PrescriptionDto>(`${BASE}/${id}/cancel`, {});
   },
 
   getPrescriptionPdf(id: string) {

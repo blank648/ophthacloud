@@ -10,9 +10,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: "/",
+    clearScreen: false,
     server: {
       host: "::",
       port: 5173,
+      strictPort: true,
       hmr: {
         overlay: false,
       },

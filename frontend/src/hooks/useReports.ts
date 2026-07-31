@@ -8,6 +8,7 @@ export const reportsKeys = {
   revenue: (from: string, to: string, groupBy: string) => ['reports', 'revenue', from, to, groupBy] as const,
   iopTrends: (patientId: string, from: string, to: string) => ['reports', 'iopTrends', patientId, from, to] as const,
   demographics: () => ['reports', 'demographics'] as const,
+  clinicalStats: () => ['reports', 'clinicalStats'] as const,
 };
 
 export function useDashboardKpis() {
@@ -46,5 +47,12 @@ export function usePatientDemographics() {
   return useQuery({
     queryKey: reportsKeys.demographics(),
     queryFn: () => reportsService.getPatientDemographics(),
+  });
+}
+
+export function useClinicalStatistics() {
+  return useQuery({
+    queryKey: reportsKeys.clinicalStats(),
+    queryFn: () => reportsService.getClinicalStatistics(),
   });
 }

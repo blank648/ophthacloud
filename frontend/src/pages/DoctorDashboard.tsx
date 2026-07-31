@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/AppLayout';
 import KPICard from '@/components/KPICard';
-import { AppointmentStatusBadge, AppointmentTypeBadge, ClinicalFlagBadge, IOPValue } from '@/components/StatusBadge';
+import { AppointmentStatusBadge, AppointmentTypeBadge } from '@/components/StatusBadge';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useDashboardKpis } from '@/hooks/useReports';
-import type { AppointmentStatus } from '@/types/appointments';
+
 import { Stethoscope, Eye, FileText, DollarSign, AlertTriangle, MessageSquare, ChevronRight } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Legend } from 'recharts';
+import { ResponsiveContainer } from 'recharts';
 
 const DoctorDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ const DoctorDashboard: React.FC = () => {
             ) : appointments.map((apt) => (
               <div key={apt.id} className="flex items-center gap-4 px-5 py-3 hover:bg-primary-50 transition-colors group">
                 <div className="w-12 text-center">
-                  <p className="text-clinical-sm font-semibold text-foreground">{new Date(apt.startTime).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="text-clinical-sm font-semibold text-foreground">{new Date(apt.startAt).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}</p>
                   <p className="text-clinical-xs text-muted-foreground">{apt.durationMinutes} min</p>
                 </div>
                 <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-[12px] font-semibold shrink-0">

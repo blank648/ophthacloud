@@ -13,6 +13,7 @@ import ro.ophthacloud.shared.audit.AuditEntry;
 import ro.ophthacloud.shared.audit.AuditLogService;
 import ro.ophthacloud.shared.security.OphthaPrincipal;
 import ro.ophthacloud.shared.security.SecurityUtils;
+import ro.ophthacloud.shared.security.StaffNameResolver;
 import ro.ophthacloud.shared.tenant.TenantContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -55,6 +56,7 @@ public class ConsultationService {
     private final AuditLogService               auditLogService;
     private final ApplicationEventPublisher     eventPublisher;
     private final ObjectMapper                  objectMapper;
+    private final StaffNameResolver             staffNameResolver;
 
     // ── Create ───────────────────────────────────────────────────────────────
 
@@ -72,7 +74,7 @@ public class ConsultationService {
                 .patientId(request.patientId())
                 .appointmentId(request.appointmentId())
                 .doctorId(UUID.fromString(staffId))
-                .doctorName("Dr. " + principal.staffRole())
+                .doctorName(staffNameResolver.resolveDoctorName(principal, TenantContext.get()))
                 .status(ConsultationStatus.DRAFT)
                 .consultationDate(request.consultationDate() != null ? request.consultationDate() : LocalDate.now())
                 .chiefComplaint(request.chiefComplaint())
@@ -110,7 +112,7 @@ public class ConsultationService {
 
         Map<String, ConsultationSectionDto> sectionMap = savedSections.stream()
                 .collect(Collectors.toMap(
-                        ConsultationSectionEntity::getSectionCode,
+                        s -> s.getSectionCode(),
                         ConsultationSectionDto::from,
                         (a, b) -> a,
                         LinkedHashMap::new
@@ -404,7 +406,7 @@ public class ConsultationService {
                 sectionRepository.findAllByConsultationId(consultationId);
         return sections.stream()
                 .collect(Collectors.toMap(
-                        ConsultationSectionEntity::getSectionCode,
+                        s -> s.getSectionCode(),
                         ConsultationSectionDto::from,
                         (a, b) -> a,
                         LinkedHashMap::new

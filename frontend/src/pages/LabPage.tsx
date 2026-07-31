@@ -8,8 +8,8 @@ import {
   useUpdateOrderStage,
   useSubmitQc,
 } from '@/hooks/useOptical';
-import type { OrderStage, QcResultDto, OpticalOrderDto } from '@/types/optical';
-import { X, Check, FlaskConical, ChevronRight, RefreshCw, Barcode, MapPin, AlertTriangle } from 'lucide-react';
+import type { QcResultDto, OpticalOrderDto } from '@/types/optical';
+import { X, Check, FlaskConical, ChevronRight, RefreshCw } from 'lucide-react';
 
 const QC_KEYS: (keyof QcResultDto)[] = [
   'valuesChecked',

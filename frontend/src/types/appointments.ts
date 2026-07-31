@@ -58,6 +58,7 @@ export interface AppointmentSummaryDto extends AppointmentDto {
 export interface CreateAppointmentRequest {
   patientId: string;
   doctorId: string;
+  doctorName: string;
   appointmentTypeId: string;
   startAt: string;
   durationMinutes?: number;

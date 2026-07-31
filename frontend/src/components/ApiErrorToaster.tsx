@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { ApiFieldError } from '@/lib/apiClient';
+import type { ApiFieldError } from '@/types/api';
 
 type AppError = Error & {
   code?: string;

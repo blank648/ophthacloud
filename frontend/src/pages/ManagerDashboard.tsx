@@ -78,27 +78,45 @@ const ManagerDashboard: React.FC = () => {
       <div className="bg-card rounded-xl border border-border shadow-sm p-5">
         <h3 className="text-clinical-md font-semibold mb-4">Top 5 diagnostice</h3>
         <div className="space-y-3">
-          {topDiagnoses.map((d, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="text-clinical-xs text-muted-foreground w-4">{i + 1}.</span>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-clinical-sm font-medium font-clinical text-foreground">{d.name}</span>
-                  <span className="text-clinical-sm font-bold text-foreground">{d.count}</span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-border">
-                  <div className="h-2 rounded-full bg-primary" style={{ width: `${(d.count / 142) * 100}%` }} />
+          {topDiagnoses.length > 0 ? (
+            topDiagnoses.map((d, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <span className="text-clinical-xs text-muted-foreground w-4">{i + 1}.</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-clinical-sm font-medium font-clinical text-foreground">{d.name}</span>
+                    <span className="text-clinical-sm font-bold text-foreground">{d.count}</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-border">
+                    <div className="h-2 rounded-full bg-primary" style={{ width: `${(d.count / Math.max(1, topDiagnoses[0]?.count || 1)) * 100}%` }} />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-clinical-sm text-muted-foreground text-center py-4">Niciun diagnostic înregistrat</p>
+          )}
         </div>
       </div>
 
       {/* Revenue per doctor */}
       <div className="bg-card rounded-xl border border-border shadow-sm p-5">
         <h3 className="text-clinical-md font-semibold mb-4">Revenue per medic</h3>
-        <p className="text-clinical-sm text-muted-foreground">Date indisponibile (Așteptând modulul avansat de HR).</p>
+        {revStats?.byDoctor && revStats.byDoctor.length > 0 ? (
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={revStats.byDoctor} layout="vertical" margin={{ left: -10, right: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--color-border-subtle))" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 9 }} tickFormatter={v => `${v} RON`} />
+              <YAxis dataKey="doctorName" type="category" tick={{ fontSize: 10 }} width={120} />
+              <Tooltip formatter={(v: number) => `${v.toLocaleString()} RON`} />
+              <Bar dataKey="total" name="Venit" fill="#10B981" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="w-full h-40 flex items-center justify-center bg-muted/20 rounded-lg">
+            <p className="text-clinical-sm text-muted-foreground">Niciun venit înregistrat pe medici</p>
+          </div>
+        )}
       </div>
     </div>
   </AppLayout>

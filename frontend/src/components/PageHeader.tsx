@@ -1,31 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { useApp, UserRole } from '@/contexts/AppContext';
+import { useApp } from '@/contexts/AppContext';
 import { logout as keycloakLogout } from '@/lib/auth';
 import { Search, Bell, MapPin, ChevronDown, LogOut, Sun, Moon, Menu } from 'lucide-react';
 import { useNotificationLogs } from '@/hooks/useNotifications';
 import CommandPalette from '@/components/CommandPalette';
 
-const roleLabels: Record<UserRole, string> = {
-  doctor: 'Doctor',
-  receptionist: 'Recepție',
-  manager: 'Manager',
-  optician: 'Optician',
-  patient: 'Pacient',
-};
 
-const roleColors: Record<UserRole, string> = {
-  doctor: '#13759C',
-  receptionist: '#10B981',
-  manager: '#8B5CF6',
-  optician: '#F59E0B',
-  patient: '#06B6D4',
-};
 
 const PageHeader: React.FC<{ breadcrumbs?: { label: string; path?: string }[] }> = ({ breadcrumbs = [] }) => {
-  const { role, setRole, logout, darkMode, toggleDarkMode, toggleSidebar } = useApp();
+  const { darkMode, toggleDarkMode, toggleSidebar } = useApp();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const { data: logsData } = useNotificationLogs();
-  const unreadCount = logsData?.data?.content?.filter((log: any) => log.status === 'FAILED').length || 0;
+  const logsList = Array.isArray(logsData?.data)
+    ? logsData.data
+    : (logsData?.data as any)?.content || [];
+  const unreadCount = logsList.filter((log: any) => log.status === 'FAILED').length || 0;
 
   // ⌘K / Ctrl+K shortcut
   useEffect(() => {

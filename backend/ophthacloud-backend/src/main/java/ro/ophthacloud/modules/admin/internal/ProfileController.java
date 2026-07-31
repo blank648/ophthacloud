@@ -38,19 +38,20 @@ public class ProfileController {
         StaffMemberEntity entity = staffMemberRepository.findById(staffId)
                 .orElseThrow(() -> new IllegalArgumentException("Staff member not found: " + staffId));
                 
+        // staff_members is the authoritative source for the clinician's name (medical record).
+        // We only sync the email from Keycloak (login identity) as a fallback — names always come
+        // from the DB so a stale/incorrect Keycloak attribute can never display the wrong person.
         StaffMemberDto dto = StaffMemberDto.from(entity);
-        
-        // Merge Keycloak profile data to ensure it always matches login credentials perfectly
+
         try {
-            log.info("Profile sync check: keycloakUserId={}, staffId={}", keycloakUserId, staffId);
             var kcUser = keycloakAdminService.getUser(keycloakUserId);
-            if (kcUser != null) {
+            if (kcUser != null && kcUser.getEmail() != null && !kcUser.getEmail().equals(dto.email())) {
                 dto = new StaffMemberDto(
                     dto.id(),
                     dto.keycloakUserId(),
-                    kcUser.getFirstName() != null ? kcUser.getFirstName() : dto.firstName(),
-                    kcUser.getLastName() != null ? kcUser.getLastName() : dto.lastName(),
-                    kcUser.getEmail() != null ? kcUser.getEmail() : dto.email(),
+                    dto.firstName(),
+                    dto.lastName(),
+                    kcUser.getEmail(),
                     dto.phone(),
                     dto.role(),
                     dto.specialization(),
@@ -63,9 +64,9 @@ public class ProfileController {
                 );
             }
         } catch (Exception e) {
-            log.warn("Failed to fetch Keycloak user data for profile sync: keycloakUserId={}", keycloakUserId, e);
+            log.warn("Failed to fetch Keycloak user data for profile email sync: keycloakUserId={}", keycloakUserId, e);
         }
-                
+
         return ApiResponse.of(dto);
     }
 }

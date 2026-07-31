@@ -48,3 +48,14 @@ export function useSignPrescription() {
     },
   });
 }
+
+export function useCancelPrescription() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => prescriptionsService.cancelPrescription(id),
+    onSuccess: (_res, id) => {
+      qc.invalidateQueries({ queryKey: prescriptionsKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: prescriptionsKeys.all });
+    },
+  });
+}

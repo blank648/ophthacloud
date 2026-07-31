@@ -1,5 +1,4 @@
-import { apiGet, apiGetPaged, apiPatch } from '@/lib/apiClient';
-import type { PagedApiResponse } from '@/types/api';
+import { apiGetPaged, apiPatch } from '@/lib/apiClient';
 
 export interface NotificationRuleDto {
   id: string;

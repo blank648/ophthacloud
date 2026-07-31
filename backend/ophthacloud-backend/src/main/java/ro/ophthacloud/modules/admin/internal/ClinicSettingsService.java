@@ -39,7 +39,7 @@ public class ClinicSettingsService {
         ClinicSettingsEntity entity = clinicSettingsRepository.findByTenantId(tenantId)
                 .orElseThrow(() -> new IllegalStateException("Clinic settings not found for tenant " + tenantId));
         
-        String name = "Clinica Oftalmologică Demo SRL";
+        String name = "";
         String cui = "";
         String phone = "";
         String email = "";
@@ -126,7 +126,7 @@ public class ClinicSettingsService {
             jdbcTemplate.update("UPDATE tenants SET address = ? WHERE id = ?", request.address(), tenantId);
         }
 
-        String name = "Clinica Oftalmologică Demo SRL";
+        String name = "";
         String cui = "";
         String phone = "";
         String email = "";

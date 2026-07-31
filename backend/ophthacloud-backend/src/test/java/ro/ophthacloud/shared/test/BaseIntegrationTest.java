@@ -18,18 +18,22 @@ import java.util.UUID;
 /**
  * Abstract base for all OphthaCloud integration tests.
  *
- * <p>Spins up:
+ * <p>
+ * Spins up:
  * <ul>
- *   <li>PostgreSQL 16 (alpine) via Testcontainers</li>
- *   <li>Redis 7 (alpine) via Testcontainers</li>
+ * <li>PostgreSQL 16 (alpine) via Testcontainers</li>
+ * <li>Redis 7 (alpine) via Testcontainers</li>
  * </ul>
  *
- * <p>Provides:
+ * <p>
+ * Provides:
  * <ul>
- *   <li>{@link #baseUrl()} — the random-port base URL for constructing requests</li>
- *   <li>{@link #client} — a Spring {@link RestClient} pre-configured with the server base URL</li>
- *   <li>{@link #headersForRole(String, UUID)} — signed Bearer JWT headers</li>
- *   <li>{@link #dbCleanup()} — table truncation before each test</li>
+ * <li>{@link #baseUrl()} — the random-port base URL for constructing
+ * requests</li>
+ * <li>{@link #client} — a Spring {@link RestClient} pre-configured with the
+ * server base URL</li>
+ * <li>{@link #headersForRole(String, UUID)} — signed Bearer JWT headers</li>
+ * <li>{@link #dbCleanup()} — table truncation before each test</li>
  * </ul>
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -61,11 +65,11 @@ public abstract class BaseIntegrationTest {
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url",      POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
-        registry.add("spring.flyway.url",      POSTGRES::getJdbcUrl);
-        registry.add("spring.flyway.user",     POSTGRES::getUsername);
+        registry.add("spring.flyway.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.flyway.user", POSTGRES::getUsername);
         registry.add("spring.flyway.password", POSTGRES::getPassword);
         registry.add("spring.data.redis.host", REDIS::getHost);
         registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379).toString());
@@ -82,6 +86,9 @@ public abstract class BaseIntegrationTest {
     @org.springframework.test.context.bean.override.mockito.MockitoBean
     protected org.springframework.mail.javamail.JavaMailSender javaMailSender;
 
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    protected io.minio.MinioClient minioClient;
+
     /** Spring RestClient — fault-tolerant (does not throw on 4xx/5xx). */
     protected RestClient client;
 
@@ -90,11 +97,19 @@ public abstract class BaseIntegrationTest {
      * Also truncates tables for a clean DB state before each test.
      */
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         client = RestClient.builder()
                 .baseUrl("http://localhost:" + port)
-                .defaultStatusHandler(status -> true, (req, resp) -> { /* never throw */ })
+                .defaultStatusHandler(status -> true, (req, resp) -> {
+                    /* never throw */ })
                 .build();
+
+        // Stub MinioClient for offline tests
+        org.mockito.Mockito.when(minioClient.bucketExists(org.mockito.Mockito.any()))
+                .thenReturn(true);
+        org.mockito.Mockito.when(minioClient.getPresignedObjectUrl(org.mockito.Mockito.any()))
+                .thenReturn("http://localhost:" + port + "/dummy-download-url.pdf");
+
         dbCleanup();
     }
 
@@ -105,8 +120,9 @@ public abstract class BaseIntegrationTest {
      * Wrapped in try/catch so tables absent in early sprints don't fail the suite.
      */
     protected void dbCleanup() {
-        for (String table : new String[]{
-                // Sprint 7: optical ERP (FK-safe order: lines before headers, items before orders)
+        for (String table : new String[] {
+                // Sprint 7: optical ERP (FK-safe order: lines before headers, items before
+                // orders)
                 "invoice_lines",
                 "invoices",
                 "optical_order_items",
@@ -130,10 +146,11 @@ public abstract class BaseIntegrationTest {
                 "patient_consents",
                 "patient_attachments",
                 "patients",
-                "audit_log"}) {
+                "audit_log" }) {
             try {
                 jdbcTemplate.execute("TRUNCATE TABLE " + table + " CASCADE");
-            } catch (Exception ignored) { /* table may not exist yet */ }
+            } catch (Exception ignored) {
+                /* table may not exist yet */ }
         }
     }
 
@@ -147,21 +164,24 @@ public abstract class BaseIntegrationTest {
     }
 
     /**
-     * Builds {@link HttpHeaders} with a signed HS256 Bearer JWT for the given role + tenant.
+     * Builds {@link HttpHeaders} with a signed HS256 Bearer JWT for the given role
+     * + tenant.
      *
-     * @param role     e.g. {@code "DOCTOR"}, {@code "ADMIN"}, {@code "RECEPTIONIST"}
+     * @param role     e.g. {@code "DOCTOR"}, {@code "ADMIN"},
+     *                 {@code "RECEPTIONIST"}
      * @param tenantId tenant UUID embedded in the JWT {@code tenant_id} claim
      */
     protected HttpHeaders headersForRole(String role, UUID tenantId) {
         String staffId = UUID.randomUUID().toString();
-        String token   = TestJwtFactory.createToken(role, tenantId, staffId);
+        String token = TestJwtFactory.createToken(role, tenantId, staffId);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         return headers;
     }
 
     /**
-     * Builds {@link HttpHeaders} with a signed HS256 Bearer JWT for a portal patient.
+     * Builds {@link HttpHeaders} with a signed HS256 Bearer JWT for a portal
+     * patient.
      *
      * @param patientId the patient UUID string embedded as {@code patient_id} claim
      * @param tenantId  tenant UUID embedded in the JWT {@code tenant_id} claim
@@ -185,12 +205,12 @@ public abstract class BaseIntegrationTest {
                 tenantId,
                 "test-" + tenantId.toString().substring(0, 8),
                 "Test Clinic",
-                "ophthacloud-test"
-        );
+                "ophthacloud-test");
     }
 
     /**
-     * Executes the given {@link java.util.function.Supplier} with the specified tenant ID set in {@link ro.ophthacloud.shared.tenant.TenantContext}.
+     * Executes the given {@link java.util.function.Supplier} with the specified
+     * tenant ID set in {@link ro.ophthacloud.shared.tenant.TenantContext}.
      */
     protected <T> T runAsTenant(UUID tenantId, java.util.function.Supplier<T> action) {
         try {

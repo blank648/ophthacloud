@@ -26,9 +26,14 @@ public record PatientSummaryDto(
         boolean hasPortalAccess,
         boolean isActive,
         List<ActiveDiagnosis> activeDiagnoses,
-        Instant createdAt
+        Instant createdAt,
+        LocalDate lastConsultationDate
 ) {
     public static PatientSummaryDto from(PatientEntity p) {
+        return from(p, null);
+    }
+
+    public static PatientSummaryDto from(PatientEntity p, LocalDate lastConsultationDate) {
         int age = Period.between(p.getDateOfBirth(), LocalDate.now()).getYears();
         List<ActiveDiagnosis> diagnoses = (p.getMedicalHistory() != null
                 && p.getMedicalHistory().getActiveDiagnoses() != null)
@@ -47,7 +52,8 @@ public record PatientSummaryDto(
                 p.isHasPortalAccess(),
                 p.isActive(),
                 diagnoses,
-                p.getCreatedAt()
+                p.getCreatedAt(),
+                lastConsultationDate
         );
     }
 }

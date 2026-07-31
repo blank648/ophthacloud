@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import AppLayout from '@/components/AppLayout';
 import PrintPreviewModal from '@/components/PrintPreviewModal';
-import { Plus, Trash2, CreditCard, Banknote, Building, FileText, Search, Loader2 } from 'lucide-react';
+import { Trash2, CreditCard, Banknote, Building, FileText, Search, Loader2 } from 'lucide-react';
 import { useClinicSettings } from '@/hooks/useAdmin';
 import Big from 'big.js';
 import { usePatients, usePatient } from '@/hooks/usePatients';
@@ -96,9 +96,7 @@ const BillingPage: React.FC = () => {
     }
 
     try {
-      const companyNotes = invoiceCompany.name 
-        ? `Factură PJ: ${invoiceCompany.name}, CIF: ${invoiceCompany.cif}, Adresă: ${invoiceCompany.address}`
-        : 'Factură PF';
+
 
       // 1. Create invoice in DRAFT status with PJ notes
       const newInvoice = await createInvoiceMutation.mutateAsync({

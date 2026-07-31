@@ -80,31 +80,4 @@ class TenantIsolationInfrastructureTest {
         assertThat(TenantContext.get()).isEqualTo(tenantA);
         assertThat(capturedFromThreadB[0]).isEqualTo(tenantB);
     }
-
-    /*
-     * TODO OC-012: Full data isolation test
-     *
-     * Activate this test in OC-012 (PatientControllerIntegrationTest) once PatientEntity exists:
-     *
-     * @Test
-     * @DisplayName("query: should return ONLY records matching TenantContext.get()")
-     * void tenantFilter_shouldReturnOnlyCurrentTenantData() {
-     *     UUID tenantA = UUID.randomUUID();
-     *     UUID tenantB = UUID.randomUUID();
-     *
-     *     // Insert a patient for tenant A (with TenantContext set to A)
-     *     TenantContext.set(tenantA);
-     *     patientRepository.save(PatientEntity.create(...));
-     *
-     *     // Insert a patient for tenant B (with TenantContext set to B)
-     *     TenantContext.set(tenantB);
-     *     patientRepository.save(PatientEntity.create(...));
-     *
-     *     // Query as tenant A — must only see tenant A's patient
-     *     TenantContext.set(tenantA);
-     *     List<PatientEntity> results = patientRepository.findAll();
-     *     assertThat(results).hasSize(1);
-     *     assertThat(results.get(0).getTenantId()).isEqualTo(tenantA);
-     * }
-     */
 }

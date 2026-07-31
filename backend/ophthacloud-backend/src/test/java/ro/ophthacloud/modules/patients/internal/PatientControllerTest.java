@@ -60,7 +60,7 @@ class PatientControllerTest {
     @Test
     @DisplayName("listPatients: returns paginated response")
     void listPatients_shouldReturnPage() throws Exception {
-        PatientSummaryDto summary = new PatientSummaryDto(UUID.randomUUID(), "OC-1", "A", "B", LocalDate.now().minusYears(30), 30, GenderType.MALE, "123", "a@b.com", false, true, List.of(), Instant.now());
+        PatientSummaryDto summary = new PatientSummaryDto(UUID.randomUUID(), "OC-1", "A", "B", LocalDate.now().minusYears(30), 30, GenderType.MALE, "123", "a@b.com", false, true, List.of(), Instant.now(), null);
         when(patientManagementFacade.listPatients(any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(summary)));
 
@@ -81,7 +81,7 @@ class PatientControllerTest {
         req.setGender(GenderType.MALE);
         req.setPhone("0755123123");
 
-        PatientDto dto = new PatientDto(UUID.randomUUID(), "OC-2", "John", "Doe", req.getDateOfBirth(), 30, GenderType.MALE, "1234567890123", req.getPhone(), null, "a@b.com", null, null, null, null, null, null, null, null, null, null, null, false, null, true, null, null, null, Instant.now(), null);
+        PatientDto dto = new PatientDto(UUID.randomUUID(), "OC-2", "John", "Doe", req.getDateOfBirth(), 30, GenderType.MALE, "1234567890123", req.getPhone(), null, "a@b.com", null, null, null, null, null, null, null, null, null, null, null, false, null, true, null, null, null, null, Instant.now(), null);
         when(patientManagementFacade.createPatient(any(CreatePatientRequest.class))).thenReturn(dto);
 
         mockMvc.perform(post("/api/v1/patients")

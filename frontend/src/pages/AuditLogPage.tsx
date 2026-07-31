@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { useAuditLogs } from '@/hooks/useAdmin';
-import { Search, Download, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import { downloadPDF } from '@/lib/printUtils';
+import { Shield, Download, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const actionColors: Record<string, string> = {
   VIEW: 'bg-blue-100 text-blue-700 border-blue-200',
@@ -152,29 +153,7 @@ const AuditLogPage: React.FC = () => {
   };
 
   const handleExportPDF = () => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @media print {
-        body * {
-          visibility: hidden;
-        }
-        #print-audit-area, #print-audit-area * {
-          visibility: visible;
-        }
-        #print-audit-area {
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-        }
-        .no-print {
-          display: none !important;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    window.print();
-    document.head.removeChild(style);
+    downloadPDF('#print-audit-area', 'Jurnal_Audit.pdf');
   };
 
   return (

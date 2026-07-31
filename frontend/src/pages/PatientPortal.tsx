@@ -15,13 +15,7 @@ import {
   CreditCard,
   Video,
   Activity,
-  Loader2,
-  AlertTriangle,
-  Info,
-  CheckCircle2,
-  Lock,
-  Eye,
-  Check
+  Info
 } from 'lucide-react';
 import OphthaLogo from '@/components/OphthaLogo';
 import { useApp } from '@/contexts/AppContext';

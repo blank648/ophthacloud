@@ -374,6 +374,7 @@ class AppointmentManagementFacadeTest {
                 null,             // notes
                 null,             // avatarUrl
                 null,             // medicalHistory
+                null,             // statistics
                 null,             // createdAt
                 null              // updatedAt
         );

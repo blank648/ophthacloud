@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useConsultation, useCreateConsultation, useSaveSection, useSignConsultation } from '@/hooks/useEmr';
 import type { SectionCode } from '@/types/emr';
 import { toast } from 'sonner';
 import AppLayout from '@/components/AppLayout';
 import PrintPreviewModal from '@/components/PrintPreviewModal';
-import { patients } from '@/data/demo-data';
+
 import { useData, ExtendedPrescription } from '@/contexts/DataContext';
 import { usePatient, usePatients } from '@/hooks/usePatients';
 import { useAuthStore } from '@/stores/authStore';
@@ -45,14 +45,17 @@ const sectionLabels = ['A — Acuitate & Refracție','B — Pupile & Motilitate'
 
 const ConsultationPage: React.FC = () => {
 
-  const navigate = useNavigate();
+
   const [searchParams] = useSearchParams();
   const urlPatientId = searchParams.get('patientId');
-  const [consultationId, setConsultationId] = useState<string | null>(null);
+  const urlConsultationId = searchParams.get('consultationId');
+  const isViewingExisting = !!urlConsultationId;
+  const [consultationId, setConsultationId] = useState<string | null>(urlConsultationId);
+  const [hydrated, setHydrated] = useState(false);
 
   const { data: consultationRes } = useConsultation(consultationId || undefined);
   const { mutateAsync: createConsultation, isPending: isCreating } = useCreateConsultation();
-  const { mutateAsync: saveSection, isPending: isSaving } = useSaveSection(consultationId || '');
+  const { mutateAsync: saveSection } = useSaveSection(consultationId || '');
   const { mutateAsync: signConsultation, isPending: isSigning } = useSignConsultation(consultationId || '');
   const { mutateAsync: createPrescription, isPending: isCreatingRx } = useCreatePrescription();
   const { mutateAsync: createInvestigation, isPending: isCreatingInv } = useCreateInvestigation();
@@ -64,7 +67,7 @@ const ConsultationPage: React.FC = () => {
   
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const { data: patientsData } = usePatients({ page: 0, size: 100 });
-  const finalPatientId = urlPatientId || selectedPatientId;
+  const finalPatientId = urlPatientId || consultationRes?.patientId || selectedPatientId;
 
   const handleStart = async () => {
     if (!finalPatientId) {
@@ -116,10 +119,10 @@ const ConsultationPage: React.FC = () => {
     phone: realPatient.phone || '',
     email: realPatient.email || '',
     address: realPatient.address || '',
-    primaryDiagnosis: realPatient.medicalHistory?.activeDiagnoses?.[0]?.icd10Name || '',
+    primaryDiagnosis: realPatient.medicalHistory?.activeDiagnoses?.[0]?.icd10Name || 'N/A',
     icdCode: realPatient.medicalHistory?.activeDiagnoses?.[0]?.icd10Code || '',
     clinicalFlags: realPatient.medicalHistory?.hasDiabetes ? ['Diabetic'] : [],
-    lastVisit: realPatient.statistics?.lastVisitDate || '',
+    lastVisit: realPatient.statistics?.lastVisitDate ? new Date(realPatient.statistics.lastVisitDate).toLocaleDateString('ro-RO') : 'N/A',
     status: realPatient.isActive !== false ? 'active' : 'inactive',
     preferredLanguage: 'RO'
   } : {
@@ -167,6 +170,48 @@ const ConsultationPage: React.FC = () => {
 
   // Section G state
   const [medications, setMedications] = useState<{name:string;dose:string;eye:string;freq:string;duration:string}[]>([]);
+
+  // Hydrate the form from an existing consultation when opened via ?consultationId=...
+  // (read-only history view from the patient profile). Runs once when data arrives.
+  useEffect(() => {
+    if (!consultationRes || hydrated || !isViewingExisting) return;
+    const secs: any = consultationRes.sections || {};
+
+    const a = secs.A?.sectionData;
+    if (a?.od) {
+      if (a.od.vaSC != null) setVaOD(a.od.vaSC);
+      if (a.od.bcva != null) setBcvaOD(a.od.bcva);
+      if (a.od.sph != null) setSphOD(a.od.sph);
+      if (a.od.cyl != null) setCylOD(a.od.cyl);
+      if (a.od.axis != null) setAxOD(a.od.axis);
+      if (a.od.add != null) setAddOD(a.od.add);
+    }
+    if (a?.os) {
+      if (a.os.vaSC != null) setVaOS(a.os.vaSC);
+      if (a.os.bcva != null) setBcvaOS(a.os.bcva);
+      if (a.os.sph != null) setSphOS(a.os.sph);
+      if (a.os.cyl != null) setCylOS(a.os.cyl);
+      if (a.os.axis != null) setAxOS(a.os.axis);
+      if (a.os.add != null) setAddOS(a.os.add);
+    }
+
+    const d = secs.D?.sectionData;
+    if (d) {
+      if (d.od?.iop != null) setIopOD(d.od.iop);
+      if (d.os?.iop != null) setIopOS(d.os.iop);
+      if (d.od?.iopMethod) setIopMethod(d.od.iopMethod);
+    }
+
+    const f = secs.F?.sectionData;
+    if (Array.isArray(f?.diagnoses)) setDiagnoses(f.diagnoses);
+
+    const g = secs.G?.sectionData;
+    if (Array.isArray(g?.medications)) setMedications(g.medications);
+    if (g?.followUpDate) setFollowUpDate(g.followUpDate);
+
+    if (consultationRes.status === 'SIGNED') setSigned(true);
+    setHydrated(true);
+  }, [consultationRes, hydrated, isViewingExisting]);
 
   // Computed
   const seqOD = useMemo(() => (sphOD + cylOD/2).toFixed(2), [sphOD, cylOD]);
@@ -364,6 +409,11 @@ const ConsultationPage: React.FC = () => {
 
   return (
     <AppLayout breadcrumbs={[{ label: 'Consultație EMR' }, { label: patient.name }]}>
+      {isViewingExisting && (
+        <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-clinical-sm font-semibold flex items-center gap-2">
+          <Eye className="w-4 h-4" /> Vizualizare consultație din istoric{consultationRes?.status === 'SIGNED' ? ' · semnată digital (doar citire)' : ' · ciornă'}
+        </div>
+      )}
       {signed && (
         <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-clinical-sm font-semibold flex items-center gap-2">
           <Check className="w-5 h-5" /> ✓ Consultație semnată digital · {currentDoctorName} · 29.03.2026 · 14:32
@@ -394,7 +444,7 @@ const ConsultationPage: React.FC = () => {
                 ))}
               </div>
               <div className="text-clinical-xs text-muted-foreground">
-                <p>Dg: {patient.primaryDiagnosis} ({patient.icdCode})</p>
+                <p>Dg: {patient.primaryDiagnosis}{patient.icdCode ? ` (${patient.icdCode})` : ''}</p>
                 <p>Ultima vizită: {patient.lastVisit}</p>
               </div>
             </div>
@@ -660,11 +710,11 @@ const ConsultationPage: React.FC = () => {
                   <label className="text-clinical-xs text-muted-foreground font-semibold block mb-1">{struct}</label>
                   <div className="grid grid-cols-2 gap-3">
                     <div><span className="text-[10px] font-semibold text-red-600 clinical-label block mb-0.5">OD</span>
-                      <textarea className="clinical-input rounded-md px-2 py-1.5 w-full text-clinical-sm" rows={2}
+                      <textarea onChange={() => setPosteriorTouched(true)} className="clinical-input rounded-md px-2 py-1.5 w-full text-clinical-sm" rows={2}
                         defaultValue=""/>
                     </div>
                     <div><span className="text-[10px] font-semibold text-blue-600 clinical-label block mb-0.5">OS</span>
-                      <textarea className="clinical-input rounded-md px-2 py-1.5 w-full text-clinical-sm" rows={2}
+                      <textarea onChange={() => setPosteriorTouched(true)} className="clinical-input rounded-md px-2 py-1.5 w-full text-clinical-sm" rows={2}
                         defaultValue=""/>
                     </div>
                   </div>

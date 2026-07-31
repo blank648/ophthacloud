@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ro.ophthacloud.modules.patients.internal.PatientEntity;
@@ -12,6 +13,7 @@ import ro.ophthacloud.modules.patients.internal.PatientMedicalHistoryEntity;
 import ro.ophthacloud.modules.patients.internal.PatientRepository;
 import ro.ophthacloud.modules.patients.dto.CreatePatientRequest;
 import ro.ophthacloud.modules.patients.dto.PatientDto;
+import ro.ophthacloud.modules.patients.dto.PatientDto.PatientStatisticsDto;
 import ro.ophthacloud.modules.patients.dto.PatientSummaryDto;
 import ro.ophthacloud.modules.patients.dto.UpdatePatientRequest;
 import ro.ophthacloud.modules.patients.event.PatientCreatedEvent;
@@ -21,6 +23,7 @@ import ro.ophthacloud.shared.security.SecurityUtils;
 import ro.ophthacloud.shared.tenant.TenantContext;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 /**
@@ -45,6 +48,7 @@ public class PatientManagementFacade {
     private final PatientRepository patientRepository;
     private final AuditLogService auditLogService;
     private final ApplicationEventPublisher eventPublisher;
+    private final JdbcTemplate jdbcTemplate;
 
     // ── Read operations ──────────────────────────────────────────────────────
 
@@ -56,7 +60,14 @@ public class PatientManagementFacade {
     public Page<PatientSummaryDto> listPatients(String q, Pageable pageable) {
         String query = (q != null && !q.isBlank()) ? q.strip() : "";
         log.debug("listPatients: tenantId={}, q='{}', page={}", SecurityUtils.currentTenantId(), query, pageable.getPageNumber());
-        return patientRepository.search(query, pageable).map(PatientSummaryDto::from);
+        return patientRepository.search(query, pageable).map(p -> {
+            LocalDate lastDate = null;
+            try {
+                lastDate = jdbcTemplate.queryForObject(
+                    "SELECT MAX(consultation_date) FROM consultations WHERE patient_id = ?", LocalDate.class, p.getId());
+            } catch (Exception ignored) {}
+            return PatientSummaryDto.from(p, lastDate);
+        });
     }
 
     /**
@@ -66,7 +77,7 @@ public class PatientManagementFacade {
      */
     public boolean patientExists(UUID patientId) {
         return patientRepository.findById(patientId)
-                .filter(PatientEntity::isActive)
+                .filter(p -> p.isActive())
                 .isPresent();
     }
 
@@ -83,7 +94,49 @@ public class PatientManagementFacade {
                 .entityType("Patient")
                 .entityId(patientId)
                 .build());
-        return PatientDto.from(patient);
+        PatientStatisticsDto stats = getPatientStatistics(patientId);
+        return PatientDto.from(patient, stats);
+    }
+
+    private PatientStatisticsDto getPatientStatistics(UUID patientId) {
+        int totalConsultations = 0;
+        int totalPrescriptions = 0;
+        int totalInvestigations = 0;
+        int totalOpticalOrders = 0;
+        LocalDate lastVisitDate = null;
+
+        try {
+            totalConsultations = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM consultations WHERE patient_id = ?", Integer.class, patientId);
+        } catch (Exception ignored) {}
+
+        try {
+            totalPrescriptions = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM prescriptions WHERE patient_id = ?", Integer.class, patientId);
+        } catch (Exception ignored) {}
+
+        try {
+            totalInvestigations = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM investigations WHERE patient_id = ?", Integer.class, patientId);
+        } catch (Exception ignored) {}
+
+        try {
+            totalOpticalOrders = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM optical_orders WHERE patient_id = ?", Integer.class, patientId);
+        } catch (Exception ignored) {}
+
+        try {
+            lastVisitDate = jdbcTemplate.queryForObject(
+                "SELECT MAX(consultation_date) FROM consultations WHERE patient_id = ?", LocalDate.class, patientId);
+        } catch (Exception ignored) {}
+
+        return new PatientStatisticsDto(
+            totalConsultations,
+            totalPrescriptions,
+            totalInvestigations,
+            totalOpticalOrders,
+            lastVisitDate
+        );
     }
 
     // ── Write operations ─────────────────────────────────────────────────────
@@ -218,7 +271,7 @@ public class PatientManagementFacade {
      */
     private PatientEntity requirePatient(UUID patientId) {
         return patientRepository.findById(patientId)
-                .filter(PatientEntity::isActive)
+                .filter(p -> p.isActive())
                 .orElseThrow(() -> new PatientNotFoundException(patientId));
     }
 
