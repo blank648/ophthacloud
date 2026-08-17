@@ -85,10 +85,9 @@ graph TD
 
 ## Screenshots
 
-![Dashboard](docs/screenshots/dashboard.png)
-![EMR Consultation](docs/screenshots/emr.png)
-![Patients List](docs/screenshots/patients.png)
-![Patient Portal](docs/screenshots/portal.png)
+![Dashboard](./docs/screenshots/dashboard.png)
+![EMR Consultation](./docs/screenshots/emr.png)
+![Patients List](./docs/screenshots/patients.png)
 
 ---
 
