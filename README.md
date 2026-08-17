@@ -18,7 +18,7 @@
 
 ## Architecture
 
-![OphthaCloud Architecture](docs/architecture.svg)
+![OphthaCloud Architecture](./docs/architecture.svg)
 
 <details>
 <summary>🔍 View Mermaid Diagram Source</summary>
