@@ -24,7 +24,7 @@ jobs:
           distribution: 'temurin'
       - name: Build & Test
         working-directory: backend/ophthacloud-backend
-        run: ./mvnw verify -Dspring.profiles.active=test
+        run: mvn verify -Dspring.profiles.active=test
   frontend:
     runs-on: ubuntu-latest
     steps:
