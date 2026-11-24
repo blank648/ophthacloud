@@ -36,3 +36,6 @@ Thumbs.db
 # Docker
 docker/data/
 *.env
+
+# Local academic reports (keep local only, never commit)
+docs/rapoarte_ingprog/
