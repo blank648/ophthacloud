@@ -39,3 +39,10 @@ docker/data/
 
 # Local academic reports (keep local only, never commit)
 docs/rapoarte_ingprog/
+
+# Academic module overrides (track Maven Wrapper, ignore local env files)
+!academic/backend/.mvn/
+!academic/backend/.mvn/**
+!academic/backend/mvnw
+!academic/backend/mvnw.cmd
+academic/**/.env

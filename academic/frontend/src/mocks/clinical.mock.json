@@ -1,0 +1,59 @@
+{
+  "createConsultation": {
+    "request": {
+      "appointmentId": "40000000-0000-4000-8000-000000000019",
+      "vaOd": "0.8 cc",
+      "vaOs": "0.9 cc",
+      "iopOd": 19.5,
+      "iopOs": 18.0,
+      "biomicroscopyNotes": "Segment anterior liniștit, cornee transparentă, cameră anterioară de profunzime medie.",
+      "diagnosisIcd10": "H40.1"
+    },
+    "response": {
+      "consultationId": "50000000-0000-4000-8000-000000000019"
+    }
+  },
+  "consultationById": {
+    "consultationId": "50000000-0000-4000-8000-000000000019",
+    "appointmentId": "40000000-0000-4000-8000-000000000019",
+    "patientId": "20000000-0000-4000-8000-000000000019",
+    "doctorId": "30000000-0000-4000-8000-000000000019",
+    "vaOd": "0.8 cc",
+    "vaOs": "0.9 cc",
+    "iopOd": 19.5,
+    "iopOs": 18.0,
+    "biomicroscopyNotes": "Segment anterior liniștit, cornee transparentă, cameră anterioară de profunzime medie.",
+    "diagnosisIcd10": "H40.1"
+  },
+  "createTreatmentPlan": {
+    "request": {
+      "consultationId": "50000000-0000-4000-8000-000000000019",
+      "medicationName": "Timolol 0.5%",
+      "targetEye": "AO",
+      "dropsPerDose": 1,
+      "scheduleHours": ["10:00", "20:00"],
+      "startDate": "2026-12-16",
+      "endDate": "2027-01-15"
+    },
+    "response": {
+      "planId": "10000000-0000-4000-8000-000000000019",
+      "patientId": "20000000-0000-4000-8000-000000000019"
+    }
+  },
+  "treatmentPlans": [
+    {
+      "planId": "10000000-0000-4000-8000-000000000019",
+      "consultationId": "50000000-0000-4000-8000-000000000019",
+      "patientId": "20000000-0000-4000-8000-000000000019",
+      "medicationName": "Timolol 0.5%",
+      "targetEye": "AO",
+      "dropsPerDose": 1,
+      "scheduleHours": ["10:00", "20:00"],
+      "startDate": "2026-12-16",
+      "endDate": "2027-01-15",
+      "activatedAt": "2026-12-16T07:30:00Z",
+      "stoppedAt": null,
+      "active": true
+    }
+  ]
+}

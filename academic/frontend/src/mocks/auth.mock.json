@@ -1,0 +1,48 @@
+{
+  "loginByRole": {
+    "PATIENT": {
+      "accessToken": "mock.jwt.patient.20000000-0000-4000-8000-000000000019",
+      "tokenType": "Bearer",
+      "expiresIn": 900,
+      "role": "PATIENT"
+    },
+    "RECEPTIONIST": {
+      "accessToken": "mock.jwt.receptionist.70000000-0000-4000-8000-000000000019",
+      "tokenType": "Bearer",
+      "expiresIn": 900,
+      "role": "RECEPTIONIST"
+    },
+    "DOCTOR": {
+      "accessToken": "mock.jwt.doctor.30000000-0000-4000-8000-000000000019",
+      "tokenType": "Bearer",
+      "expiresIn": 900,
+      "role": "DOCTOR"
+    }
+  },
+  "meByRole": {
+    "PATIENT": {
+      "userId": "60000000-0000-4000-8000-000000000019",
+      "email": "pacient.demo@ophthacloud.ro",
+      "role": "PATIENT",
+      "patientId": "20000000-0000-4000-8000-000000000019",
+      "uiFontScale": 1.0,
+      "highContrast": false
+    },
+    "RECEPTIONIST": {
+      "userId": "70000000-0000-4000-8000-000000000019",
+      "email": "receptie.demo@ophthacloud.ro",
+      "role": "RECEPTIONIST",
+      "patientId": null,
+      "uiFontScale": 1.0,
+      "highContrast": false
+    },
+    "DOCTOR": {
+      "userId": "30000000-0000-4000-8000-000000000019",
+      "email": "dr.popescu@ophthacloud.ro",
+      "role": "DOCTOR",
+      "patientId": null,
+      "uiFontScale": 1.0,
+      "highContrast": false
+    }
+  }
+}
