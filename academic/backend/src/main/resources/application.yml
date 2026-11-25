@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ophthacloud-academic
+  datasource:
+    url: jdbc:postgresql://localhost:${ACADEMIC_DB_PORT:5435}/${POSTGRES_DB:ophthacloud_academic}
+    username: ${POSTGRES_USER:ophthacloud}
+    password: ${POSTGRES_PASSWORD:ophthacloud_dev}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+app:
+  clinic-zone: Europe/Bucharest
+  jwt:
+    secret: ${JWT_SECRET:dev-only-change-me-minimum-32-bytes-ophthacloud-2026}
+    expiration-minutes: 15
