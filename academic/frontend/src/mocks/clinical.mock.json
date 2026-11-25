@@ -31,7 +31,7 @@
       "medicationName": "Timolol 0.5%",
       "targetEye": "AO",
       "dropsPerDose": 1,
-      "scheduleHours": ["08:00", "20:00"],
+      "scheduleHours": ["10:00", "20:00"],
       "startDate": "2026-12-16",
       "endDate": "2027-01-15"
     },
@@ -48,7 +48,7 @@
       "medicationName": "Timolol 0.5%",
       "targetEye": "AO",
       "dropsPerDose": 1,
-      "scheduleHours": ["08:00", "20:00"],
+      "scheduleHours": ["10:00", "20:00"],
       "startDate": "2026-12-16",
       "endDate": "2027-01-15",
       "activatedAt": "2026-12-16T07:30:00Z",

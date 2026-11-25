@@ -18,9 +18,18 @@ const confirmSample: ConfirmDoseResponse = adherenceMock.confirm.response as Con
 const summarySample: AdherenceSummaryResponse = adherenceMock.summary as AdherenceSummaryResponse;
 const overlapErrorSample: ApiErrorResponse = errorsMock['409_APPOINTMENT_OVERLAP'];
 
+const FONT_SCALE_STEPS = [1.0, 1.2, 1.5, 1.8, 2.0] as const;
+
 export default function App() {
   const [fontScale, setFontScale] = useState<number>(authMock.meByRole.PATIENT.uiFontScale);
   const [highContrast, setHighContrast] = useState<boolean>(authMock.meByRole.PATIENT.highContrast);
+
+  const cycleFontScale = () => {
+    setFontScale((prev) => {
+      const next = FONT_SCALE_STEPS.find((step) => step > prev);
+      return next ?? FONT_SCALE_STEPS[0];
+    });
+  };
 
   useEffect(() => {
     document.documentElement.style.setProperty('--font-scale', String(fontScale));
@@ -43,7 +52,7 @@ export default function App() {
         <div className="flex flex-wrap items-center gap-3" role="region" aria-label="Bara de accesibilitate CIC-06.1">
           <button
             type="button"
-            onClick={() => setFontScale((prev) => (prev >= 2 ? 1 : Number((prev + 0.25).toFixed(2))))}
+            onClick={cycleFontScale}
             className="touch-target inline-flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] px-4 py-2 font-medium"
           >
             <Type className="w-5 h-5" aria-hidden="true" />
