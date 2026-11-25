@@ -1,11 +1,12 @@
 # OphthaCloud — Board de Execuție & Checklist Echipa 19 (Fereastra 1: 24 nov – 16 dec 2026)
 
-> **STATUT DOCUMENT:** **Propunere spre aprobare în Echipa 19 înainte de startul execuției.**  
-> **Instrucțiuni pentru echipă:** Revizuiți sarcinile, branch-urile și termenele alocate mai jos, adăugați observațiile necesare și bifați aprobarea în **Secțiunea 6** înainte de a începe execuția. Pe parcursul lucrului, bifați direct căsuțele `- [ ]` pe GitHub pe măsură ce fiecare livrabil atinge Definition of Done.
+> **STATUT DOCUMENT:** **APROBAT DE ECHIPA 19 — EXECUȚIE ACTIVĂ (Etapa 0 finalizată și integrată pe `main` la 25 nov 2026).**  
+> **Ghid operațional de start rapid pentru colegi & CLI tools:** [academic/TEAM_PLAYBOOK.md](academic/TEAM_PLAYBOOK.md) · Pe parcursul lucrului, bifați direct căsuțele `- [ ]` pe măsură ce fiecare livrabil atinge Definition of Done.
 
 **Documente de referință (Sursa unică de adevăr):**
 - Specificația tehnică completă: [ARCHITECTURE_AND_EXECUTION_PLAN.md](ARCHITECTURE_AND_EXECUTION_PLAN.md)
 - Rezumatul executiv al echipei: [PLAN_PE_SCURT_ECHIPA_19.md](PLAN_PE_SCURT_ECHIPA_19.md)
+- Ghidul practic de execuție (Quickstart, Git & AI Prompts): [academic/TEAM_PLAYBOOK.md](academic/TEAM_PLAYBOOK.md)
 
 ---
 
@@ -42,12 +43,12 @@
 
 ### Etapa 0 — Deblocare (24–25 nov)
 
-- [ ] **`E0-01`** | **Adrian** | Branch: `chore/e0-infra-db-ci` | Dep: — | Termen: **24 nov**
-  - **DoD:** `docker-compose.yml` pornește **exclusiv PostgreSQL 16** cu volum + healthcheck (`docker compose up -d`); workflow GitHub Actions minimal (`mvn test` + `npm run build` la PR) activ pe `main`.
-- [ ] **`E0-02`** | **Adrian** | Branch: `feat/e0-backend-flyway-v1-v7` | Dep: `E0-01` | Termen: **25 nov (prânz)**
-  - **DoD:** Schelet Spring Boot 3.3 (Java 21) cu cele 4 pachete (`patientbooking`, `clinicalamsler`, `gamification`, `securityaudit`), `Clock` injectabil (`Europe/Bucharest`), erori standardizate și migrările **Flyway `V1..V7`** aplicate curat cu `ddl-auto=validate`.
-- [ ] **`E0-03`** | **Adrian** | Branch: `feat/e0-contracts-and-mocks` | Dep: `E0-02` | Termen: **25 nov (seara)**
-  - **DoD:** Interfața internă `TreatmentPlanQueryService` + DTO-uri predate lui Dobrescu; schelet Vite/React + pachetul `mocks/*.json` (UUID-uri coerente) + proxy `/api` predate lui Iovan; 1 test unitar șablon pe repo.
+- [x] **`E0-01`** | **Adrian** | Branch: `feat/e0-stage0-foundation` | Dep: — | Termen: **24 nov** *(Finalizat 25 nov)*
+  - **DoD:** `academic/docker-compose.yml` pornește **exclusiv PostgreSQL 16** (port `5435`) cu volum + healthcheck (`docker compose -f academic/docker-compose.yml up -d`); workflow GitHub Actions minimal (`./mvnw -B test` + `npm ci && npm run build` la PR) activ pe `main`.
+- [x] **`E0-02`** | **Adrian** | Branch: `feat/e0-stage0-foundation` | Dep: `E0-01` | Termen: **25 nov (prânz)** *(Finalizat 25 nov)*
+  - **DoD:** Schelet Spring Boot 3.3 (Java 21) cu cele 4 pachete (`patientbooking`, `clinicalamsler`, `gamification`, `securityaudit`) + reguli ArchUnit, `Clock` injectabil (`Europe/Bucharest`), erori standardizate și migrările **Flyway `V1..V7`** aplicate curat cu `ddl-auto=validate`.
+- [x] **`E0-03`** | **Adrian** | Branch: `feat/e0-stage0-foundation` | Dep: `E0-02` | Termen: **25 nov (seara)** *(Finalizat 25 nov)*
+  - **DoD:** Interfața internă `TreatmentPlanQueryService` + DTO-uri + entități `gamification` predate lui Dobrescu; schelet Vite/React + pachetul `mocks/*.json` (UUID-uri coerente) + proxy `/api` predate lui Iovan; suita șablon `CnpModulo11ValidatorTest` (9 teste) pe repo.
 
 ### Etapa 1 — Dezvoltare în paralel & 3 puncte de legare timpurie FE–BE (26 nov – 5 dec)
 
@@ -92,44 +93,44 @@
 > **Notă de izolare (`SP-01`):** Repository-ul conține deja o bază de cod mai veche (`backend/ophthacloud-backend/`, `frontend/`, `docker/` cu Keycloak și Tauri). Pentru a păstra schema Flyway `V1..V7` curată, fără conflicte de porturi/dependențe și cu un CI rapid, modulul academic trebuie izolat într-o structură dedicată (de ex. `academic/backend`, `academic/frontend`, `academic/docker-compose.yml`) sau cu țintele curățate explicit.
 
 ### A. Infrastructură locală & CI minimal (`24 nov`)
-- [ ] `docker-compose.yml` (strict serviciul `postgres:16-alpine`, baza `ophthacloud_academic`, volum numit și healthcheck `pg_isready`, fără servicii Keycloak/MinIO/Redis/FE/BE; oprește orice container Postgres vechi din `docker/docker-compose.dev.yml` sau mapează explicit portul în `.env.example`)
-- [ ] `.github/workflows/ci.yml` — workflow minimal la `pull_request` și `push` pe `main`:
-  - [ ] Job Java 21 Temurin: `./mvnw -B test`
-  - [ ] Job Node 20: `npm ci && npm run build`
+- [x] `academic/docker-compose.yml` (strict serviciul `postgres:16-alpine`, baza `ophthacloud_academic` pe portul host `5435`, volum numit și healthcheck `pg_isready`, fără servicii Keycloak/MinIO/Redis/FE/BE, configurat în `academic/.env.example`)
+- [x] `.github/workflows/ci.yml` — workflow minimal la `pull_request` și `push` pe `main`:
+  - [x] Job Java 21 Temurin: `./mvnw -B test`
+  - [x] Job Node 20: `npm ci && npm run build`
 
 ### B. Schelet Backend Spring Boot 3.3 + Migrări Flyway `V1..V7` (`24–25 nov`)
-- [ ] `pom.xml` (Spring Boot `3.3.x`, Java `21`, `spring-boot-starter-web`, `spring-boot-starter-security`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `flyway-core`, `flyway-database-postgresql`, `postgresql`, `jjwt-api/impl/jackson`, `spring-boot-starter-test` cu JUnit 5 + Mockito)
-- [ ] `src/main/resources/application.yml` (`spring.jpa.hibernate.ddl-auto=validate`, `spring.jpa.properties.hibernate.jdbc.time_zone=UTC`, `app.clinic-zone=Europe/Bucharest`)
-- [ ] Structura de pachete sub `ro.unibuc.fmi.ophthacloud`:
-  - [ ] `common/` (`ClockConfig` cu `Clock` injectabil, `ApiErrorResponse` `{code, message, fieldErrors, requestId}`, `GlobalExceptionHandler`)
-  - [ ] `securityaudit/`
-  - [ ] `patientbooking/`
-  - [ ] `clinicalamsler/`
-  - [ ] `gamification/`
-- [ ] Cele 7 migrări Flyway în `src/main/resources/db/migration/`:
-  - [ ] `V1__users.sql` (`users`, `LOWER(TRIM(email))`, `CHECK role`)
-  - [ ] `V2__patients.sql` (`patients`, `UNIQUE cnp`, `CHECK ui_font_scale BETWEEN 1.0 AND 2.0`, indecși B-Tree + `pg_trgm`)
-  - [ ] `V3__appointments.sql` (`CREATE EXTENSION IF NOT EXISTS btree_gist`, `appointments`, `EXCLUDE USING gist` pe intervale suprapuse per `doctor_id`)
-  - [ ] `V4__consultations_and_treatment_plans.sql` (`consultations`, `treatment_plans` cu `patient_id` denormalizat controlat, `activated_at`, `stopped_at`, index `(patient_id, start_date, end_date)`)
-  - [ ] `V5__adherence_and_amsler.sql` (`adherence_logs` cu `UNIQUE (plan_id, scheduled_for)`, `amsler_tests`)
-  - [ ] `V6__gamification_and_vouchers.sql` (`gamification_profiles`, `discount_vouchers` cu `UNIQUE (patient_id, points_milestone)`, FK `appointments.applied_voucher_id`)
-  - [ ] `V7__clinic_settings_and_audit.sql` (`clinic_settings` cu rândul `clinic_id = 1` pre-inserat `{"300":5,"600":10,"1000":15}`, `gdpr_audit_logs` + trigger append-only care blochează `UPDATE`/`DELETE`)
+- [x] `pom.xml` (Spring Boot `3.3.x`, Java `21`, `spring-boot-starter-web`, `spring-boot-starter-security`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `flyway-core`, `flyway-database-postgresql`, `postgresql`, `jjwt-api/impl/jackson`, `spring-boot-starter-test` cu JUnit 5 + Mockito + ArchUnit)
+- [x] `src/main/resources/application.yml` (`spring.jpa.hibernate.ddl-auto=validate`, `spring.jpa.properties.hibernate.jdbc.time_zone=UTC`, `app.clinic-zone=Europe/Bucharest`)
+- [x] Structura de pachete sub `ro.unibuc.fmi.ophthacloud`:
+  - [x] `common/` (`ClockConfig` cu `Clock` injectabil, `ApiErrorResponse` `{code, message, fieldErrors, requestId}`, `GlobalExceptionHandler`)
+  - [x] `securityaudit/`
+  - [x] `patientbooking/`
+  - [x] `clinicalamsler/`
+  - [x] `gamification/`
+- [x] Cele 7 migrări Flyway în `src/main/resources/db/migration/`:
+  - [x] `V1__users.sql` (`users`, `LOWER(TRIM(email))`, `CHECK role`)
+  - [x] `V2__patients.sql` (`patients`, `UNIQUE cnp`, `CHECK ui_font_scale BETWEEN 1.0 AND 2.0`, indecși B-Tree + `pg_trgm`)
+  - [x] `V3__appointments.sql` (`CREATE EXTENSION IF NOT EXISTS btree_gist`, `appointments`, `EXCLUDE USING gist` pe intervale suprapuse per `doctor_id`)
+  - [x] `V4__consultations_and_treatment_plans.sql` (`consultations`, `treatment_plans` cu `patient_id` denormalizat controlat, `activated_at`, `stopped_at`, index `(patient_id, start_date, end_date)`)
+  - [x] `V5__adherence_and_amsler.sql` (`adherence_logs` cu `UNIQUE (plan_id, scheduled_for)`, `amsler_tests`)
+  - [x] `V6__gamification_and_vouchers.sql` (`gamification_profiles`, `discount_vouchers` cu `UNIQUE (patient_id, points_milestone)`, FK `appointments.applied_voucher_id`)
+  - [x] `V7__clinic_settings_and_audit.sql` (`clinic_settings` cu rândul `clinic_id = 1` pre-inserat `{"300":5,"600":10,"1000":15}`, `gdpr_audit_logs` + trigger append-only care blochează `UPDATE`/`DELETE`/`TRUNCATE`)
 
 ### C. Kit de deblocare pentru Dobrescu (`25 nov`)
-- [ ] Interfața publică + DTO în `clinicalamsler.api.TreatmentPlanQueryService`:
+- [x] Interfața publică + DTO în `clinicalamsler.api.TreatmentPlanQueryService`:
   - `List<TreatmentPlanSnapshotDto> findPlansForPatientInWindow(UUID patientId, LocalDate from, LocalDate to)` (câmpuri: `planId`, `patientId`, `medicationName`, `targetEye`, `dropsPerDose`, `List<String> scheduleHours`, `startDate`, `endDate`, `Instant activatedAt`, `Instant stoppedAt`, `boolean active`)
-- [ ] Scheletul entităților JPA (`AdherenceLogEntity`, `GamificationProfileEntity`) mapate pe `V5`/`V6` + DTO-urile exacte din §5.1 (`TodayAdherenceResponse`, `ConfirmDoseRequest`, `ConfirmDoseResponse`, `AdherenceSummaryResponse`)
-- [ ] 1 test unitar șablon (`CnpModulo11ValidatorTest.java` cu JUnit 5) ca referință de stil pentru extinderea asistată de AI
+- [x] Scheletul entităților JPA (`AdherenceLogEntity`, `GamificationProfileEntity`) mapate pe `V5`/`V6` + DTO-urile exacte din §5.1 (`TodayAdherenceResponse`, `ConfirmDoseRequest`, `ConfirmDoseResponse`, `AdherenceSummaryResponse`)
+- [x] 1 test unitar șablon (`CnpModulo11ValidatorTest.java` cu JUnit 5) ca referință de stil pentru extinderea asistată de AI
 
 ### D. Schelet Frontend + Mock Data JSON pentru Iovan (`25 nov`)
-- [ ] `vite.config.ts` cu proxy `/api` → `http://localhost:8080` și `.env.example` cu `VITE_USE_MOCKS=true`
-- [ ] Directorul `src/mocks/` cu același set canonic de UUID-uri pe toate fișierele (`patientId = "20000000-0000-4000-8000-000000000019"`, `doctorId = "30000000-0000-4000-8000-000000000019"`, `appointmentId = "40000000-0000-4000-8000-000000000019"`, `planId = "10000000-0000-4000-8000-000000000019"`):
-  - [ ] `src/mocks/auth.mock.json` — răspunsuri Login pe cele 3 roluri (`PATIENT`, `RECEPTIONIST`, `DOCTOR`) + `GET /api/me` (`uiFontScale: 1.0`, `highContrast: false`)
-  - [ ] `src/mocks/reception.mock.json` — `POST /api/patients` (cu `initialCredentials`), `GET /api/patients/search` (`items/page/size/total`), `GET /api/doctors`, `GET & POST /api/appointments`
-  - [ ] `src/mocks/clinical.mock.json` — `POST & GET /api/consultations`, `POST & GET /api/treatment-plans` (`scheduleHours: ["08:00", "20:00"]`, `targetEye: "AO"`, `dropsPerDose: 1`)
-  - [ ] `src/mocks/adherence.mock.json` — `GET /api/adherence/today` (cu 3 variante de stare UI: `has_next_dose`, `all_done_today`, `no_active_plan`), `POST /api/adherence/confirm`, `GET /api/adherence/{patientId}/summary`
-  - [ ] `src/mocks/errors.mock.json` — `409 PATIENT_EXISTS`, `409 APPOINTMENT_OVERLAP`, `422 DOSE_WINDOW_CLOSED`, `401 UNAUTHORIZED` în format `{code, message, fieldErrors, requestId}`
-- [ ] Verificare chei JSON obligatorii în `adherence.mock.json` (pentru legarea `INT-03` fără rescrieri):
+- [x] `vite.config.ts` cu proxy `/api` → `http://localhost:8080` și `.env.example` cu `VITE_USE_MOCKS=true`
+- [x] Directorul `src/mocks/` cu același set canonic de UUID-uri pe toate fișierele (`patientId = "20000000-0000-4000-8000-000000000019"`, `doctorId = "30000000-0000-4000-8000-000000000019"`, `appointmentId = "40000000-0000-4000-8000-000000000019"`, `planId = "10000000-0000-4000-8000-000000000019"`):
+  - [x] `src/mocks/auth.mock.json` — răspunsuri Login pe cele 3 roluri (`PATIENT`, `RECEPTIONIST`, `DOCTOR`) + `GET /api/me` (`uiFontScale: 1.0`, `highContrast: false`)
+  - [x] `src/mocks/reception.mock.json` — `POST /api/patients` (cu `initialCredentials`), `GET /api/patients/search` (`items/page/size/total`), `GET /api/doctors`, `GET & POST /api/appointments`
+  - [x] `src/mocks/clinical.mock.json` — `POST & GET /api/consultations`, `POST & GET /api/treatment-plans` (`scheduleHours: ["10:00", "20:00"]`, `targetEye: "AO"`, `dropsPerDose: 1`)
+  - [x] `src/mocks/adherence.mock.json` — `GET /api/adherence/today` (cu 3 variante de stare UI: `has_next_dose`, `all_done_today`, `no_active_plan`), `POST /api/adherence/confirm`, `GET /api/adherence/{patientId}/summary`
+  - [x] `src/mocks/errors.mock.json` — `409 PATIENT_EXISTS`, `409 APPOINTMENT_OVERLAP`, `422 DOSE_WINDOW_CLOSED`, `401 UNAUTHORIZED` în format `{code, message, fieldErrors, requestId}`
+- [x] Verificare chei JSON obligatorii în `adherence.mock.json` (pentru legarea `INT-03` fără rescrieri):
   - `GET /api/adherence/today`: `{ clinicDate, nextDose: { planId, medicationName, targetEye, dropsPerDose, scheduledFor, localTime }, doses: [...], confirmedToday, expectedToday, dailyProgressPercent, currentStreak, totalPoints, rewardsSwitchEnabled }`
   - `POST /api/adherence/confirm`: request `{ planId, scheduledFor }` → response `{ status, confirmedAt, confirmedToday, expectedToday, dailyProgressPercent, currentStreak, forgivenessShields, totalPoints, rewardsSwitchEnabled }`
   - `GET /api/adherence/{patientId}/summary`: `{ from, to, expected, confirmedOnTime, confirmedLate, missed, pending, adherencePercent, history: { items, page, size, total } }`
@@ -182,9 +183,9 @@
 ## 6. Aprobare & Feedback Echipa 19 (înainte de execuție)
 
 ### Semnături de aliniere pe roluri, contracte și termene
-- [ ] **Adrian Diaconescu** (Software Architect & Lead Backend Engineer) — Aprobat
-- [ ] **Dobrescu Andrei-Alexandru** (Backend Engineer `gamification` & Owner Unit Tests) — Aprobat
-- [ ] **Iovan Andrei-Alexandru** (Frontend SPA & Patient Accessibility UX Engineer) — Aprobat
+- [x] **Adrian Diaconescu** (Software Architect & Lead Backend Engineer) — Aprobat (24 nov 2026)
+- [x] **Dobrescu Andrei-Alexandru** (Backend Engineer `gamification` & Owner Unit Tests) — Aprobat (24 nov 2026)
+- [x] **Iovan Andrei-Alexandru** (Frontend SPA & Patient Accessibility UX Engineer) — Aprobat (24 nov 2026)
 
 ### Feedback / Ajustări cerute de echipă înainte de start
 - *(Completați aici eventualele modificări de termene, nume de branch-uri sau clarificări pe contracte înainte de pornirea Etapei 1.)*
