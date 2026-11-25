@@ -1,0 +1,128 @@
+{
+  "today": {
+    "has_next_dose": {
+      "clinicDate": "2026-12-16",
+      "nextDose": {
+        "planId": "10000000-0000-4000-8000-000000000019",
+        "medicationName": "Timolol 0.5%",
+        "targetEye": "AO",
+        "dropsPerDose": 1,
+        "scheduledFor": "2026-12-16T08:00:00Z",
+        "localTime": "10:00"
+      },
+      "doses": [
+        {
+          "planId": "10000000-0000-4000-8000-000000000019",
+          "medicationName": "Timolol 0.5%",
+          "targetEye": "AO",
+          "dropsPerDose": 1,
+          "scheduledFor": "2026-12-16T08:00:00Z",
+          "localTime": "10:00",
+          "status": "PENDING",
+          "confirmedAt": null
+        },
+        {
+          "planId": "10000000-0000-4000-8000-000000000019",
+          "medicationName": "Timolol 0.5%",
+          "targetEye": "AO",
+          "dropsPerDose": 1,
+          "scheduledFor": "2026-12-16T18:00:00Z",
+          "localTime": "20:00",
+          "status": "PENDING",
+          "confirmedAt": null
+        }
+      ],
+      "confirmedToday": 0,
+      "expectedToday": 2,
+      "dailyProgressPercent": 0,
+      "currentStreak": 0,
+      "totalPoints": 0,
+      "rewardsSwitchEnabled": true
+    },
+    "all_done_today": {
+      "clinicDate": "2026-12-16",
+      "nextDose": null,
+      "doses": [
+        {
+          "planId": "10000000-0000-4000-8000-000000000019",
+          "medicationName": "Timolol 0.5%",
+          "targetEye": "AO",
+          "dropsPerDose": 1,
+          "scheduledFor": "2026-12-16T08:00:00Z",
+          "localTime": "10:00",
+          "status": "CONFIRMED_ON_TIME",
+          "confirmedAt": "2026-12-16T08:05:00Z"
+        },
+        {
+          "planId": "10000000-0000-4000-8000-000000000019",
+          "medicationName": "Timolol 0.5%",
+          "targetEye": "AO",
+          "dropsPerDose": 1,
+          "scheduledFor": "2026-12-16T18:00:00Z",
+          "localTime": "20:00",
+          "status": "CONFIRMED_ON_TIME",
+          "confirmedAt": "2026-12-16T18:03:00Z"
+        }
+      ],
+      "confirmedToday": 2,
+      "expectedToday": 2,
+      "dailyProgressPercent": 100,
+      "currentStreak": 1,
+      "totalPoints": 20,
+      "rewardsSwitchEnabled": true
+    },
+    "no_active_plan": {
+      "clinicDate": "2026-12-16",
+      "nextDose": null,
+      "doses": [],
+      "confirmedToday": 0,
+      "expectedToday": 0,
+      "dailyProgressPercent": 0,
+      "currentStreak": 0,
+      "totalPoints": 0,
+      "rewardsSwitchEnabled": true
+    }
+  },
+  "confirm": {
+    "request": {
+      "planId": "10000000-0000-4000-8000-000000000019",
+      "scheduledFor": "2026-12-16T08:00:00Z"
+    },
+    "response": {
+      "status": "CONFIRMED_ON_TIME",
+      "confirmedAt": "2026-12-16T08:05:00Z",
+      "confirmedToday": 1,
+      "expectedToday": 2,
+      "dailyProgressPercent": 50,
+      "currentStreak": 0,
+      "forgivenessShields": 1,
+      "totalPoints": 10,
+      "rewardsSwitchEnabled": true
+    }
+  },
+  "summary": {
+    "patientId": "20000000-0000-4000-8000-000000000019",
+    "from": "2026-12-16",
+    "to": "2026-12-16",
+    "expected": 1,
+    "confirmedOnTime": 1,
+    "confirmedLate": 0,
+    "missed": 0,
+    "pending": 0,
+    "adherencePercent": 100.0,
+    "history": {
+      "items": [
+        {
+          "planId": "10000000-0000-4000-8000-000000000019",
+          "medicationName": "Timolol 0.5%",
+          "scheduledFor": "2026-12-16T08:00:00Z",
+          "confirmedAt": "2026-12-16T08:05:00Z",
+          "status": "CONFIRMED_ON_TIME"
+        }
+      ],
+      "page": 0,
+      "size": 20,
+      "total": 1
+    }
+  }
+}

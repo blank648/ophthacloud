@@ -1,0 +1,68 @@
+{
+  "createPatient": {
+    "request": {
+      "email": "pacient.demo@ophthacloud.ro",
+      "cnp": "1850515400018",
+      "lastName": "Ionescu",
+      "firstName": "Andrei",
+      "phone": "+40722000019",
+      "birthDate": "1985-05-15",
+      "sex": "M"
+    },
+    "response": {
+      "patientId": "20000000-0000-4000-8000-000000000019",
+      "userId": "60000000-0000-4000-8000-000000000019",
+      "initialCredentials": {
+        "email": "pacient.demo@ophthacloud.ro",
+        "temporaryPassword": "OphthaDemo!2026#19"
+      }
+    }
+  },
+  "searchPatients": {
+    "items": [
+      {
+        "patientId": "20000000-0000-4000-8000-000000000019",
+        "cnp": "1850515400018",
+        "lastName": "Ionescu",
+        "firstName": "Andrei",
+        "phone": "+40722000019",
+        "birthDate": "1985-05-15",
+        "sex": "M"
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "total": 1
+  },
+  "doctors": [
+    {
+      "doctorId": "30000000-0000-4000-8000-000000000019",
+      "email": "dr.popescu@ophthacloud.ro",
+      "fullName": "Dr. Elena Popescu"
+    }
+  ],
+  "appointments": [
+    {
+      "appointmentId": "40000000-0000-4000-8000-000000000019",
+      "patientId": "20000000-0000-4000-8000-000000000019",
+      "patientName": "Ionescu Andrei",
+      "doctorId": "30000000-0000-4000-8000-000000000019",
+      "doctorName": "Dr. Elena Popescu",
+      "scheduledAt": "2026-12-16T07:00:00Z",
+      "durationMin": 30,
+      "status": "SCHEDULED"
+    }
+  ],
+  "createAppointment": {
+    "request": {
+      "patientId": "20000000-0000-4000-8000-000000000019",
+      "doctorId": "30000000-0000-4000-8000-000000000019",
+      "scheduledAt": "2026-12-16T07:00:00Z",
+      "durationMin": 30
+    },
+    "response": {
+      "appointmentId": "40000000-0000-4000-8000-000000000019",
+      "status": "SCHEDULED"
+    }
+  }
+}

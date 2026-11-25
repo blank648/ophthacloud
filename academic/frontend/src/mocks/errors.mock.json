@@ -1,0 +1,32 @@
+{
+  "409_PATIENT_EXISTS": {
+    "code": "PATIENT_EXISTS",
+    "message": "Un pacient cu acest CNP sau email există deja în sistem.",
+    "fieldErrors": {
+      "cnp": "CNP deja înregistrat"
+    },
+    "requestId": "req-mock-409-patient-0019"
+  },
+  "409_APPOINTMENT_OVERLAP": {
+    "code": "APPOINTMENT_OVERLAP",
+    "message": "Medicul selectat are deja o programare în intervalul solicitat.",
+    "fieldErrors": {
+      "scheduledAt": "Interval ocupat pentru Dr. Elena Popescu"
+    },
+    "requestId": "req-mock-409-appt-0019"
+  },
+  "422_DOSE_WINDOW_CLOSED": {
+    "code": "DOSE_WINDOW_CLOSED",
+    "message": "Fereastra de confirmare pentru această doză este închisă.",
+    "fieldErrors": {
+      "scheduledFor": "Doza nu poate fi confirmată în afara ferestrei permise"
+    },
+    "requestId": "req-mock-422-dose-0019"
+  },
+  "401_UNAUTHORIZED": {
+    "code": "UNAUTHORIZED",
+    "message": "Sesiunea a expirat sau autentificarea lipsește.",
+    "fieldErrors": {},
+    "requestId": "req-mock-401-auth-0019"
+  }
+}
