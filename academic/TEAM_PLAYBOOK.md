@@ -15,8 +15,8 @@ Din rădăcina repository-ului (`ophthacloud/`):
 # 1. Pornește DOAR PostgreSQL 16 în Docker (mapat pe localhost:5435 -> zero conflicte cu 5432/5434)
 docker compose -f academic/docker-compose.yml up -d
 
-# 2. Pornește Backendul Spring Boot 3.3 nativ pe http://localhost:8080 (aplică automat Flyway V1..V7)
-cd academic/backend && ./mvnw spring-boot:run
+# 2. Pornește Backendul Spring Boot 3.3 nativ pe http://localhost:8080 (profil `local` -> aplică Flyway V1..V7 + generează cheia JWT locală + 3 conturi demo: pacient.demo / receptie.demo / dr.popescu @ophthacloud.ro, parola `OphthaDemo!2026#19`)
+cd academic/backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 
 # 3. (În alt terminal) Pornește Frontendul React/Vite nativ pe http://localhost:5173
 cd academic/frontend && cp -n .env.example .env && npm install && npm run dev

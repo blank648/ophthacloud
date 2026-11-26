@@ -52,7 +52,7 @@
 
 ### Etapa 1 — Dezvoltare în paralel & 3 puncte de legare timpurie FE–BE (26 nov – 5 dec)
 
-- [ ] **`E1-AD-01`** | **Adrian** | Branch: `feat/security-jwt-auth` | Dep: `E0-02` | Termen: **27 nov**
+- [x] **`E1-AD-01`** | **Adrian** | Branch: `feat/security-jwt-auth` | Dep: `E0-02` | Termen: **27 nov** *(Finalizat 26 nov)*
   - **DoD:** Spring Security 6 + JWT (`15 min`, `sub=userId`, `role`) + verificare `is_active`; `POST /api/auth/login`, `GET /api/me`, `PATCH /api/me/preferences` + teste unitare RBAC/login.
 - [ ] **`E1-IO-01`** | **Iovan** | Branch: `feat/fe-shell-e01-a11y` | Dep: `E0-03` | Termen: **27 nov**
   - **DoD:** Client HTTP cu switch `VITE_USE_MOCKS`, `E-01` (Login) și bara persistentă `CIC-06.1` funcțională înainte și după login (`--font-scale` `1.0–2.0` / `100%–200%`, High-Contrast cu etichetă text, ținte ≥`48×48 px`).
