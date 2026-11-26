@@ -26,5 +26,5 @@ spring:
 app:
   clinic-zone: Europe/Bucharest
   jwt:
-    secret: ${JWT_SECRET:dev-only-change-me-minimum-32-bytes-ophthacloud-2026}
+    secret: ${JWT_SECRET}
     expiration-minutes: 15
