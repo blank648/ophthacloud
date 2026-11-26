@@ -1,0 +1,4 @@
+# Local sessions expire on restart unless a persistent key is supplied.
+app:
+  jwt:
+    secret: ${JWT_SECRET:${random.uuid}${random.uuid}}
