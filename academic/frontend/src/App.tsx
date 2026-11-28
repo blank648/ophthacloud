@@ -1,105 +1,65 @@
-import { useEffect, useState } from 'react';
-import { CheckCircle2, Eye, Contrast, Type } from 'lucide-react';
-import authMock from './mocks/auth.mock.json';
-import receptionMock from './mocks/reception.mock.json';
-import clinicalMock from './mocks/clinical.mock.json';
-import adherenceMock from './mocks/adherence.mock.json';
-import errorsMock from './mocks/errors.mock.json';
-import { USE_MOCKS, API_BASE_URL } from './lib/apiClient';
-import type {
-  AdherenceSummaryResponse,
-  ApiErrorResponse,
-  ConfirmDoseResponse,
-  TodayAdherenceResponse,
-} from './types/api';
+import { useEffect, useRef } from 'react';
+import { LogOut } from 'lucide-react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { AccessibilityBar } from './components/AccessibilityBar';
+import { LoginPage } from './features/auth/LoginPage';
+import { SessionProvider, useSession } from './features/auth/SessionProvider';
+import logoHead from './assets/brand/ophthacloud-logo-head.svg';
+import type { UserRole } from './types/api';
 
-const todaySample: TodayAdherenceResponse = adherenceMock.today.has_next_dose as TodayAdherenceResponse;
-const confirmSample: ConfirmDoseResponse = adherenceMock.confirm.response as ConfirmDoseResponse;
-const summarySample: AdherenceSummaryResponse = adherenceMock.summary as AdherenceSummaryResponse;
-const overlapErrorSample: ApiErrorResponse = errorsMock['409_APPOINTMENT_OVERLAP'];
+const ROLE_HOME: Record<UserRole, string> = {
+  PATIENT: '/pacient', RECEPTIONIST: '/receptie', DOCTOR: '/medic', ADMIN: '/administrare',
+};
+const ROLE_LABEL: Record<UserRole, string> = {
+  PATIENT: 'Pacient', RECEPTIONIST: 'Recepție', DOCTOR: 'Medic', ADMIN: 'Administrare',
+};
 
-const FONT_SCALE_STEPS = [1.0, 1.2, 1.5, 1.8, 2.0] as const;
+function Workspace({ role }: { role: UserRole }) {
+  const { user } = useSession();
+  if (!user) return <Navigate to="/autentificare" replace />;
+  if (user.role !== role) return <Navigate to={ROLE_HOME[user.role]} replace />;
+  return <section className="workspace" aria-labelledby="workspace-title">
+    <h1 id="workspace-title">{ROLE_LABEL[role]}</h1>
+    <p>Te-ai autentificat cu succes.</p>
+    <p className="muted">Spațiul de lucru este în pregătire. Setările de afișare rămân disponibile în bara de sus.</p>
+  </section>;
+}
+
+function AppShell() {
+  const { user, signOut } = useSession();
+  const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  const previousPath = useRef(location.pathname);
+  useEffect(() => {
+    document.title = `${user ? ROLE_LABEL[user.role] : 'Autentificare'} · OphthaCloud`;
+    if (previousPath.current !== location.pathname) mainRef.current?.focus();
+    previousPath.current = location.pathname;
+  }, [location.pathname, user]);
+
+  return <div className={`app-shell ${user ? 'workspace-shell' : 'login-shell'}`}>
+    {user && <a className="skip-link" href="#main-content">Sari la conținut</a>}
+    <header className="page-width header">
+      <div className="brand">
+        <img className="brand-logo" src={logoHead} width="40" height="40" alt="" draggable={false} />
+        <span>OphthaCloud</span>
+      </div>
+      <div className="header-actions">
+        {user && <div className="account-controls"><span className="account-role">{ROLE_LABEL[user.role]}</span>
+          <button className="secondary-button" type="button" onClick={signOut}><LogOut aria-hidden="true" />Ieși din cont</button>
+        </div>}
+        <AccessibilityBar />
+      </div>
+    </header>
+    <main className={`page-width main-content ${user ? '' : 'login-composition'}`} id="main-content" ref={mainRef} tabIndex={-1}>
+      <Routes>
+        <Route path="/autentificare" element={user ? <Navigate to={ROLE_HOME[user.role]} replace /> : <LoginPage />} />
+        {(Object.keys(ROLE_HOME) as UserRole[]).map((role) => <Route key={role} path={ROLE_HOME[role]} element={<Workspace role={role} />} />)}
+        <Route path="*" element={<Navigate to={user ? ROLE_HOME[user.role] : '/autentificare'} replace />} />
+      </Routes>
+    </main>
+  </div>;
+}
 
 export default function App() {
-  const [fontScale, setFontScale] = useState<number>(authMock.meByRole.PATIENT.uiFontScale);
-  const [highContrast, setHighContrast] = useState<boolean>(authMock.meByRole.PATIENT.highContrast);
-
-  const cycleFontScale = () => {
-    setFontScale((prev) => {
-      const next = FONT_SCALE_STEPS.find((step) => step > prev);
-      return next ?? FONT_SCALE_STEPS[0];
-    });
-  };
-
-  useEffect(() => {
-    document.documentElement.style.setProperty('--font-scale', String(fontScale));
-    document.documentElement.setAttribute('data-high-contrast', String(highContrast));
-  }, [fontScale, highContrast]);
-
-  return (
-    <div className="min-h-screen p-6 max-w-4xl mx-auto space-y-6">
-      <header className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Eye className="w-7 h-7 text-[var(--accent-primary)]" aria-hidden="true" />
-          <div>
-            <h1 className="text-xl font-bold">OphthaCloud Academic · Stage 0 Ready</h1>
-            <p className="text-sm text-[var(--text-muted)]">
-              Mod date: {USE_MOCKS ? 'Mock JSON activ' : 'API Live'} ({API_BASE_URL})
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3" role="region" aria-label="Bara de accesibilitate CIC-06.1">
-          <button
-            type="button"
-            onClick={cycleFontScale}
-            className="touch-target inline-flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] px-4 py-2 font-medium"
-          >
-            <Type className="w-5 h-5" aria-hidden="true" />
-            <span>Text: {Math.round(fontScale * 100)}%</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setHighContrast((prev) => !prev)}
-            aria-pressed={highContrast}
-            className="touch-target inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] text-[var(--accent-contrast)] px-4 py-2 font-medium"
-          >
-            <Contrast className="w-5 h-5" aria-hidden="true" />
-            <span>Contrast ridicat: {highContrast ? 'ACTIV' : 'OPRIT'}</span>
-          </button>
-        </div>
-      </header>
-
-      <main className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 space-y-4">
-        <div className="flex items-center gap-2 font-semibold">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600" aria-hidden="true" />
-          <span>Contracte canonice & Mock Kit verificate</span>
-        </div>
-        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt className="text-[var(--text-muted)]">Pacient canonic</dt>
-            <dd className="font-mono">{receptionMock.createPatient.response.patientId}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--text-muted)]">Plan activ</dt>
-            <dd className="font-mono">{clinicalMock.createTreatmentPlan.response.planId}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--text-muted)]">Următoarea doză ({todaySample.clinicDate})</dt>
-            <dd>
-              {todaySample.nextDose?.medicationName} · {todaySample.nextDose?.targetEye} ·{' '}
-              {todaySample.nextDose?.localTime}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[var(--text-muted)]">Confirmare & Sumar</dt>
-            <dd>
-              {confirmSample.status} (+{confirmSample.totalPoints}p) · Aderență: {summarySample.adherencePercent}% ·
-              Eroare exemplu: {overlapErrorSample.code}
-            </dd>
-          </div>
-        </dl>
-      </main>
-    </div>
-  );
+  return <SessionProvider><AppShell /></SessionProvider>;
 }

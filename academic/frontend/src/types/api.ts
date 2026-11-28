@@ -22,6 +22,11 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface PreferencesRequest {
+  uiFontScale: number;
+  highContrast: boolean;
+}
+
 export interface LoginResponse {
   accessToken: string;
   tokenType: string;

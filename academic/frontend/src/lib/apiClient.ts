@@ -48,12 +48,14 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
   }
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const requestToken = inMemoryAccessToken;
   const response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     ...init,
     headers,
   });
 
-  if (response.status === 401 && !unauthorizedHandled) {
+  // Un login respins nu inseamna sesiune expirata. Ignoram si cererile unei sesiuni vechi.
+  if (response.status === 401 && requestToken && requestToken === inMemoryAccessToken && !unauthorizedHandled) {
     unauthorizedHandled = true;
     clearAccessToken();
     onUnauthorizedCallback?.();

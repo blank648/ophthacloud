@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-28T18:06:59.8119185Z",
+  "title": "Design System: OphthaCloud",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "primary",
+        "canonical": "#f8bbd0"
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "primary-hover",
+        "canonical": "#f48fb1"
+      },
+      "page": {
+        "role": "neutral",
+        "displayName": "page",
+        "canonical": "#f2f3f3"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "surface",
+        "canonical": "#ffffff"
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "text",
+        "canonical": "#2e333c"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "muted",
+        "canonical": "#5e626b"
+      }
+    },
+    "breakpoints": [
+      {
+        "name": "compact-desktop",
+        "value": "1050px"
+      },
+      {
+        "name": "mobile",
+        "value": "700px"
+      }
+    ],
+    "motion": [
+      {
+        "name": "pending-spinner",
+        "value": "spin 1s linear infinite",
+        "purpose": "Pending login, disabled for reduced motion."
+      }
+    ]
+  },
+  "components": [
+    {
+      "css": ".primary{min-height:48px;background:var(--primary);color:var(--on-primary)}.primary:hover:not(:disabled){background:var(--hover)}.primary:disabled{background:var(--disabled);color:var(--disabled-text)}",
+      "html": "<button class=\"primary\">Intră în cont</button>",
+      "name": "Primary button",
+      "description": "Valid-input enabled action",
+      "kind": "button"
+    },
+    {
+      "css": ".brand{display:flex;align-items:center;user-select:none;pointer-events:none}",
+      "html": "<div class=\"brand\"><img class=\"brand-logo\" alt=\"\" draggable=\"false\"><span>OphthaCloud</span></div>",
+      "name": "Brand",
+      "description": "Noninteractive, nonselectable head logo and wordmark",
+      "kind": "brand"
+    },
+    {
+      "css": ".panel{background:var(--surface);color:var(--text);border-radius:16px}",
+      "html": "<section class=\"panel\" aria-labelledby=\"login-title\"><h1 id=\"login-title\">Intră în cont</h1></section>",
+      "name": "Login panel",
+      "description": "Left panel centered beneath header; decorative responsive eagle alongside",
+      "kind": "card"
+    }
+  ],
+  "narrative": {
+    "overview": "OphthaCloud helps patients and clinic staff complete care tasks with clear hierarchy, consistent controls and readable Romanian.",
+    "keyCharacteristics": [
+      "Pale pink actions, neutral surfaces and approved eagle branding.",
+      "One sans-serif family, sentence-case labels and visible focus.",
+      "Persistent display settings and explicit action feedback."
+    ],
+    "rules": [],
+    "dos": [
+      "Do use semantic tokens, shared controls and correct Romanian diacritics."
+    ],
+    "donts": [
+      "Don't treat frontend route guards as authorization."
+    ]
+  }
+}
+
